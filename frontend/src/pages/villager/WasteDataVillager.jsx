@@ -8,7 +8,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 axios.defaults.withCredentials = true;
 
 const WasteDataVillager = () => {
-    document.title = "DoiTung Zero-Waste";
+    document.title = "DoiTung Zero-Waste"
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
