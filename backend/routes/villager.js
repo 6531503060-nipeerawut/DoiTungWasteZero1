@@ -48,13 +48,83 @@ const verifyUser = (req, res, next) => {
     }
 };
 
-// HomeVillager Page
 router.get('/homevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "vill_id is missing from the token" });
+    const { dataSet, locationId, mode, date, type } = req.query;
+  
+    if (!date) return res.status(400).json({ error: "Date is required" });
+  
+    let baseQuery = `SELECT wt.wasteType_name, SUM(caw.caw_wasteTotal) as total
+    FROM collectorAddWeights caw
+    JOIN wasteTypes wt ON caw.caw_wasteType = wt.wasteType_id
+    JOIN locations l ON caw.caw_location = l.id`;
+  
+    let conditions = [];
+    let params = [];
+  
+    if (dataSet === 'village') {
+        conditions.push('l.type = "village"');
+    } else if (dataSet === 'agency') {
+        conditions.push('l.type = "agency"');
+    } else if (dataSet === 'all') {
+        // ถ้าเป็น 'all' ไม่ต้องกรองตามสถานที่
+        // ไม่ต้องเพิ่มเงื่อนไข
     }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-});
+  
+    if (dataSet !== 'all' && locationId) {
+        conditions.push('l.id = ?');
+        params.push(locationId);
+    }
+  
+    if (mode === 'day') {
+        conditions.push('DATE(caw.caw_date) = ?');
+        params.push(date);
+    } else if (mode === 'month') {
+        conditions.push('MONTH(caw.caw_date) = ? AND YEAR(caw.caw_date) = ?');
+        const [month, year] = date.split('-');
+        params.push(month, year);
+    } else if (mode === 'year') {
+        conditions.push('YEAR(caw.caw_date) = ?');
+        params.push(date);
+    }
+  
+    if (conditions.length > 0) {
+        baseQuery += ' WHERE ' + conditions.join(' AND ');
+    }
+  
+    baseQuery += ' GROUP BY wt.wasteType_name';
+  
+    db.query(baseQuery, params, (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json({status: "success", results: results, vill_id: req.vill_id });
+    });
+  });
+  
+  // Get locations by type for get Waste data using with home page
+  router.get('/home-locations', verifyUser, (req, res) => {
+    const { type } = req.query;
+  
+    let query = 'SELECT * FROM locations ORDER BY id ASC';
+    let params = [];
+  
+    // Modify the query based on the 'type'
+    if (type && type !== 'all') {
+        if (!['village', 'agency'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid type' });
+        }
+        query = `SELECT * FROM locations WHERE type = ? ORDER BY id ASC`;
+        params.push(type);
+    }
+  
+    // Execute the query
+    db.query(query, params, (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json({ status: "success", results: results, vill_id: req.vill_id });
+    });
+  });
 
 // Get Adding Waste Data from Villager
 router.get('/addingwastevillager', verifyUser, (req, res) => {
@@ -263,5 +333,176 @@ router.put('/update-profile-villager/:vill_id', verifyUser, upload.single('profi
         return res.status(200).json({ status: "success", vill_id: req.vill_id });
     });
 });
+
+
+// Get Waste data from collector added
+router.get('/dashboard', verifyUser, (req, res) => {
+    const { dataSet, locationId, mode, date } = req.query;
+
+    if (!date) return res.status(400).json({ error: "Date is required" });
+
+    let baseQuery = `SELECT wt.wasteType_name, SUM(caw.caw_wasteTotal) as total
+    FROM collectorAddWeights caw
+    JOIN wasteTypes wt ON caw.caw_wasteType = wt.wasteType_id
+    JOIN locations l ON caw.caw_location = l.id`;
+
+    let conditions = [];
+    let params = [];
+
+    if (dataSet === 'village') {
+        conditions.push('l.type = "village"');
+    } else if (dataSet === 'agency') {
+        conditions.push('l.type = "agency"');
+    }
+
+    if (dataSet !== 'all' && locationId) {
+        conditions.push('l.id = ?');
+        params.push(locationId);
+    }
+
+    if (mode === 'day') {
+        conditions.push('DATE(caw.caw_date) = ?');
+        params.push(date);
+    } else if (mode === 'month') {
+        conditions.push('MONTH(caw.caw_date) = ? AND YEAR(caw.caw_date) = ?');
+        const [month, year] = date.split('-');
+        params.push(month, year);
+    } else if (mode === 'year') {
+        conditions.push('YEAR(caw.caw_date) = ?');
+        params.push(date);
+    }
+
+    if (conditions.length > 0) {
+        baseQuery += ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    baseQuery += ' GROUP BY wt.wasteType_name';
+    
+    db.query(baseQuery, params, (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json({status: "success", results: results, vill_id: req.vill_id });
+    });
+});
+
+
+// Get locations by type for get Waste data
+router.get('/dashboard-locations', verifyUser, (req, res) => {
+    const { type } = req.query;
+
+    if (!['village', 'agency'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid type' });
+    }
+
+    const query = `SELECT id, name FROM locations WHERE type = ? ORDER BY id ASC`;
+
+    db.query(query, [type], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json({status: "success", results: results, vill_id: req.vill_id });
+    });
+});
+
+// verify user login before get data added from villager
+router.get('/verify', verifyUser, (req, res) => {
+    res.json({
+        status: "success",
+        vill_id: req.vill_id,
+    });
+});
+
+// Get all waste categories
+router.get('/categoryvillager', verifyUser, (req, res) => {
+    const search = req.query.search || '';
+    const query = `SELECT * FROM waste_categories WHERE name LIKE ? OR description LIKE ?`;
+  
+    const values = [`%${search}%`, `%${search}%`];
+  
+    db.query(query, values, (err, result) => {
+        if (err) {
+            return res.status(500).json({ Error: err.message });
+        }
+        return res.status(200).json({
+            status: "success",
+            results: result,
+            vill_id: req.vill_id,
+        });
+    });
+  });;
+
+//get all category
+
+router.get('/dirtywastevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  router.get('/sellwastevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  router.get('/composablegarbagevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "vill_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  router.get('/energyrdfwastevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "vill_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  router.get('/hazardouswastevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "vill_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  
+  router.get('/bathroomwastevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "vill_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  
+  router.get('/bigwastevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "vill_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+
+  //get GarbageTruckSchedule
+router.get('/garbagetruckschedulevillager', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+  
+  router.get('/garbageData', verifyUser, (req, res) => {
+    if (!req.vill_id) {
+        return res.status(400).json({ error: "coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
+  });
+
+  //get wastepricevillager
+router.get('/wastepricevillager',verifyUser, (req, res) => {
+    return res.status(200).json({ status: "success" });
+  })
 
 module.exports = router;

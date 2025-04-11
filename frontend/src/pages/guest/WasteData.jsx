@@ -19,7 +19,7 @@ const WasteData = () => {
     const [data, setData] = useState([]);
     const [name, setName] = useState('');
     const [options, setOptions] = useState([]);
-    const [isSearched, setIsSearched] = useState(false); // State สำหรับเช็คว่าได้กด search หรือยัง
+    const [isSearched, setIsSearched] = useState(false);
 
     // ดึงข้อมูลตัวเลือก (options) สำหรับการค้นหา
     useEffect(() => {
@@ -50,7 +50,7 @@ const WasteData = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            let url = `${process.env.REACT_APP_BACKEND_URL}/waste-data`;
+            let url = `${process.env.REACT_APP_BACKEND_URL}/wastedata`;
             const searchTerm = search || (options.length === 1 ? options[0] : null);
             if (searchTerm) {
                 url += `?type=${type}&search=${searchTerm}`;
@@ -136,9 +136,9 @@ const WasteData = () => {
                         <FaBars />
                     </button>
                     <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
-                        <li><Link className="dropdown-item" to="/prices">ราคารับซื้อ</Link></li>
-                        <li><Link className="dropdown-item" to="/separate-waste">วิธีการแยกชนิดขยะ</Link></li>
-                        <li><Link className="dropdown-item" to="/garbage-truck">ตารางรถเก็บขยะ</Link></li>
+                        <li><Link className="dropdown-item" to="/waste-price">ราคารับซื้อ</Link></li>
+                        <li><Link className="dropdown-item" to="/category">วิธีการแยกชนิดขยะ</Link></li>
+                        <li><Link className="dropdown-item" to="/GarbageTruckSchedule">ตารางรถเก็บขยะ</Link></li>
                         <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
                         <li><button className="dropdown-item text-danger" onClick={handleLogout}>ออกจากระบบ</button></li>
                     </ul>
@@ -217,9 +217,9 @@ const WasteData = () => {
 
             {/* Footer */}
             <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-                <Link to="/" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-                <Link to="/waste-data" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-                <Link to="/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
+            <Link to="/" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
+            <Link to="/wastedata" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
+            <Link to="/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
             </footer>
         </div>
     );

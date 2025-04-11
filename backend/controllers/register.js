@@ -34,7 +34,7 @@ const register = (req, res) => {
                 const detailID = result.insertId;
 
                 if (role === "1") {
-                    const wasteCollectorSQL = "INSERT INTO collectors (`details_id`, `coll_fullName`, `coll_descriptionRole`, `coll_profileImage`) VALUES (?, ?, ?)";
+                    const wasteCollectorSQL = "INSERT INTO collectors (`details_id`, `coll_fullName`, `coll_descriptionRole`, `coll_profileImage`) VALUES (?, ?, ?, ?)";
                     db.query(wasteCollectorSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
                         if (err) {
                             console.error("Error inserting into collectors", err);

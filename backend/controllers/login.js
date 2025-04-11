@@ -46,7 +46,8 @@ const login = (req, res) => {
 
                     res.cookie('token', token, {
                         httpOnly: true,
-                        sameSite: 'Lax',
+                        secure: false,
+                        sameSite: 'Lax'
                     });
 
                     if (role === 1) {
@@ -66,4 +67,30 @@ const login = (req, res) => {
     });
 };
 
-module.exports = login;
+const verifyAdmin = async (req, res) => {
+    const { password } = req.body;
+
+    if (!password) {
+        return res.status(400).json({ Error: "Password is required" });
+    }
+
+    const adminHashedPassword = process.env.ADMIN_PASS;
+
+    if (!adminHashedPassword) {
+        return res.status(500).json({ Error: "Admin password is not set in environment variables" });
+    }
+
+    try {
+        const isMatch = await bcrypt.compare(password, adminHashedPassword);
+        if (!isMatch) {
+            return res.status(401).json({ Error: "Invalid Admin Password" });
+        }
+
+        return res.status(200).json({ Status: "Success" });
+    } catch (error) {
+        console.error("Error comparing password:", error);
+        return res.status(500).json({ Error: "Server error while verifying admin password" });
+    }
+};
+
+module.exports = { login, verifyAdmin };

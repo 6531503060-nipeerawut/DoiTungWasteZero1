@@ -7,7 +7,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 axios.defaults.withCredentials = true;
 
-const ProfileVillager = () => {
+const ProfileCollector = () => {
     document.title = "DoiTung Zero-Waste";
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ const ProfileVillager = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
-    const [villId, setVillId] = useState(null);
+    const [collId, setCollId] = useState(null);
 
     const [profile, setProfile] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -29,15 +29,14 @@ const ProfileVillager = () => {
     useEffect(() => {
         const fetchAuthStatus = async () => {
             try {
-                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/v/profile-villager/${villId}`, { withCredentials: true })
+                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/profile-collector/${collId}`, { withCredentials: true })
                 if (res.data.status?.toLowerCase() === "success"){
                     setAuth(true);
                     console.log("Profile Data:", res.data.data);
                     setProfile(res.data.data);
-                    setVillId(res.data.vill_id);
+                    setCollId(res.data.coll_id);
                     setFormData({
-                        fullName: res.data.data.vill_fullName,
-                        descriptionRole: res.data.data.vill_descriptionRole,
+                        fullName: res.data.data.coll_fullName,
                         phone: res.data.data.phone,
                         profileImage: null,
                         role: res.data.data.role_name
@@ -54,7 +53,7 @@ const ProfileVillager = () => {
             }
         };
         fetchAuthStatus();
-    }, [villId]);
+    }, [collId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -76,7 +75,6 @@ const ProfileVillager = () => {
         const updatedData = new FormData();
 
         updatedData.append('fullName', formData.fullName);
-        updatedData.append('descriptionRole', formData.descriptionRole);
         updatedData.append('phone', formData.phone);
 
         const roleMap = {
@@ -91,16 +89,15 @@ const ProfileVillager = () => {
             updatedData.append('profileImage', formData.profileImage);
         }
 
-        axios.put(`${process.env.REACT_APP_BACKEND_URL}/v/update-profile-villager/${villId}`, updatedData, { withCredentials: true })
+        axios.put(`${process.env.REACT_APP_BACKEND_URL}/c/update-profile-collector/${collId}`, updatedData, { withCredentials: true })
         .then(res => {
             console.log('Profile updated successfully');
             setShowModal(false);
             setProfile({
                 ...profile,
-                vill_fullName: formData.fullName,
-                vill_descriptionRole: formData.descriptionRole,
+                coll_fullName: formData.fullName,
                 phone: formData.phone,
-                vill_profileImage: formData.profileImage ? formData.profileImage.name : profile.vill_profileImage
+                coll_profileImage: formData.profileImage ? formData.profileImage.name : profile.coll_profileImage
             });
         })
         .catch(err => {
@@ -154,11 +151,11 @@ const ProfileVillager = () => {
                                 <FaBars />
                             </button>
                             <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
-                                <li><Link className="dropdown-item" to="/v/wastepricevillager">ราคารับซื้อ</Link></li>
-                                <li><Link className="dropdown-item" to="/v/categoryvillager">วิธีการแยกชนิดขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/v/garbagetruckschedulevillager">ตารางรถเก็บขยะ</Link></li>
+                                <li><Link className="dropdown-item" to="/c/wastepricecollector">ราคารับซื้อ</Link></li>
+                                <li><Link className="dropdown-item" to="/c/categorycollector">วิธีการแยกชนิดขยะ</Link></li>
+                                <li><Link className="dropdown-item" to="/c/garbagetruckschedulecollector">ตารางรถเก็บขยะ</Link></li>
                                 <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
-                                <li><Link className="dropdown-item" to={`/v/profile-villager/${villId}`}>บัญชีผู้ใช้</Link></li>
+                                <li><Link className="dropdown-item" to={`/c/profile-collector/${collId}`}>บัญชีผู้ใช้</Link></li>
                                 <li><button className="dropdown-item text-danger" onClick={handleLogout}>ออกจากระบบ</button></li>
                             </ul>
                         </div>
@@ -170,15 +167,14 @@ const ProfileVillager = () => {
                         <div className="row">
                             <div className="mb-4">
                                 <img
-                                    src={`${process.env.REACT_APP_BACKEND_URL}/images/` + profile.vill_profileImage}
+                                    src={`${process.env.REACT_APP_BACKEND_URL}/images/` + profile.coll_profileImage}
                                     alt="Profile"
                                     className="img-fluid rounded-circle"
                                     style={{ width: '150px', borderRadius: '50%' }}
                                 />
-                                <p><strong>ชื่อ - นามสกุล:</strong> {profile.vill_fullName}</p>
+                                <p><strong>ชื่อ - นามสกุล:</strong> {profile.coll_fullName}</p>
                                 <p><strong>สถานะบัญชีผู้ใช้:</strong> {profile.role_name}</p>
-                                <p><strong>ชื่อหมู่บ้าน/ชื่อหน่วยงาน:</strong> {profile.vill_descriptionRole}</p>
-                                <p><strong>เบอร์โทรศัพท์:</strong> {`0${profile.phone}`}</p>
+                                <p><strong>เบอร์โทรศัพท์:</strong> {`${profile.phone}`}</p>
                                 <button onClick={() => setShowModal(true)} className="btn btn-primary">แก้ไขข้อมูล</button>
                             </div>
                         </div>
@@ -223,17 +219,6 @@ const ProfileVillager = () => {
                                                     />
                                                 </div>
                                                 <div className="form-group">
-                                                    <label>ชื่อหมู่บ้าน/ชื่อหน่วยงาน</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        name="descriptionRole"
-                                                        value={formData.descriptionRole}
-                                                        onChange={handleChange}
-                                                        placeholder="Enter description"
-                                                    />
-                                                </div>
-                                                <div className="form-group">
                                                     <label>Phone</label>
                                                     <input
                                                         type="text"
@@ -253,14 +238,15 @@ const ProfileVillager = () => {
                         )}
                     </div>
                     
+                
                     {/* Footer */}
                     <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-                    <Link to="/v/homevillager" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-                    <Link to="/v/wastedatavillager" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-                    <Link to="/v/addingwastevillager" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
-                    <Link to="/v/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
+                        <Link to="/c/homecollector" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
+                        <Link to="/c/wastedatacollector" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
+                        <Link to="/c/addingwastecollector" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
+                        <Link to="/c/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
                     </footer>
-            </>
+                </>
             ) : (
                 <div className="d-flex flex-column align-items-center justify-content-center min-vh-100">
                     <h3>{message}</h3>
@@ -272,4 +258,4 @@ const ProfileVillager = () => {
     );
 };
 
-export default ProfileVillager;
+export default ProfileCollector;

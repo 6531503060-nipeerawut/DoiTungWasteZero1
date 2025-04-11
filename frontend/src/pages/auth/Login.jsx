@@ -16,6 +16,7 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Modal from '@mui/material/Modal';
 
 function Login() {
     document.title = "DoiTung Zero-Waste";
@@ -26,6 +27,10 @@ function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+
+    const [adminPassword, setAdminPassword] = useState('');
+    const [showAdminModal, setShowAdminModal] = useState(false);
+    const [adminError, setAdminError] = useState('');
 
     axios.defaults.withCredentials = true;
 
@@ -61,6 +66,31 @@ function Login() {
 
     const togglePasswordVisibility = () => {
         setShowPassword((prev) => !prev);
+    };
+
+    const openAdminModal = () => {
+        setAdminPassword('');
+        setAdminError('');
+        setShowAdminModal(true);
+    };
+
+    const closeAdminModal = () => {
+        setShowAdminModal(false);
+    };
+
+    const verifyAdminPassword = async () => {
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/verifyAdmin`, { password: adminPassword });
+
+            if (res.data.Status === "Success") {
+                navigate('/register');
+            } else {
+                setAdminError("รหัสผ่านไม่ถูกต้อง");
+            }
+        } catch (err) {
+            console.error("Admin Verification Error:", err);
+            setAdminError("เกิดข้อผิดพลาด กรุณาลองอีกครั้ง");
+        }
     };
 
     return (
@@ -130,15 +160,15 @@ function Login() {
                             >
                                 {loading ? 'Logging in...' : 'เข้าสู่ระบบ'}
                             </Button>
-                            <Grid container>
-                                <Grid item xs>
+                            <Grid container justifyContent="space-between">
+                                <Grid item>
                                     <Link href="/forgotPassword" variant="body2">
                                         ลืมรหัสผ่าน?
                                     </Link>
                                 </Grid>
                                 <Grid item>
-                                    <Link href="/register" variant="body2">
-                                        {"Don't have an account? Create Account"}
+                                    <Link onClick={openAdminModal} variant="body2" style={{ cursor: 'pointer' }}>
+                                        สร้างบัญชี
                                     </Link>
                                 </Grid>
                             </Grid>
@@ -154,6 +184,51 @@ function Login() {
                     </CardContent>
                 </Card>
             </Box>
+
+            {/* Modal สำหรับตรวจสอบรหัสผ่าน Admin */}
+            <Modal open={showAdminModal} onClose={closeAdminModal}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: 2,
+                        width: 300,
+                        textAlign: 'center',
+                    }}
+                >
+                    <Typography variant="h6" gutterBottom>
+                        ยืนยันตัวตนผู้ดูแลระบบ(Admin)
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        label="รหัสผ่าน"
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        margin="normal"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                verifyAdminPassword();
+                            }
+                        }}
+                    />
+                    {adminError && <Typography color="error">{adminError}</Typography>}
+                    <Box mt={2} display="flex" justifyContent="space-between">
+                        <Button onClick={closeAdminModal} variant="outlined">
+                            ยกเลิก
+                        </Button>
+                        <Button onClick={verifyAdminPassword} variant="contained">
+                            ยืนยัน
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
+
         </Container>
     );
 }

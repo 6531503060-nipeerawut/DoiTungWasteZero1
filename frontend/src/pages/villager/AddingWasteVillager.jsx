@@ -130,9 +130,9 @@ function AddingWasteVillager() {
                                 <FaBars />
                             </button>
                             <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
-                                <li><Link className="dropdown-item" to="/prices">ราคารับซื้อ</Link></li>
-                                <li><Link className="dropdown-item" to="/separate-waste">วิธีการแยกชนิดขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/garbage-truck">ตารางรถเก็บขยะ</Link></li>
+                                <li><Link className="dropdown-item" to="/v/wastepricevillager">ราคารับซื้อ</Link></li>
+                                <li><Link className="dropdown-item" to="/v/categoryvillager">วิธีการแยกชนิดขยะ</Link></li>
+                                <li><Link className="dropdown-item" to="/v/garbagetruckschedulevillager">ตารางรถเก็บขยะ</Link></li>
                                 <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
                                 <li><Link className="dropdown-item" to={`/v/profile-villager/${villId}`}>บัญชีผู้ใช้</Link></li>
                                 <li><button className="dropdown-item text-danger" onClick={handleLogout}>ออกจากระบบ</button></li>
@@ -240,10 +240,10 @@ function AddingWasteVillager() {
 
                     {/* Footer */}
                     <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-                        <Link to="/v/homevillager" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-                        <Link to="/v/wastedatavillager" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-                        <Link to="/v/addingwastevillager" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
-                        <Link to="/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
+                    <Link to="/v/homevillager" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
+                    <Link to="/v/wastedatavillager" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
+                    <Link to="/v/addingwastevillager" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
+                    <Link to="/v/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
                     </footer>
                 </>
             ) : (

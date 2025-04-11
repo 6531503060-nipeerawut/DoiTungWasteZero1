@@ -6,7 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 axios.defaults.withCredentials = true;
-const WasteDataVillager = () => {
+const WasteDataCollector = () => {
     document.title = "DoiTung Zero-Waste";
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -14,7 +14,7 @@ const WasteDataVillager = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
-    const [villId, setVillId] = useState(null);
+    const [collId, setCollId] = useState(null);
 
     const [type, setType] = useState('หมู่บ้าน');
     const [search, setSearch] = useState('');
@@ -26,14 +26,14 @@ const WasteDataVillager = () => {
     // fetchData ใช้ useCallback เพื่อความเสถียร
     const fetchData = useCallback(async () => {
         try {
-            let url = `${process.env.REACT_APP_BACKEND_URL}/v/wastedatavillager`;
+            let url = `${process.env.REACT_APP_BACKEND_URL}/c/wastedatacollector`;
             if (search) {
                 url += `?type=${type}&search=${search}`;
             }
             const response = await axios.get(url);
             setData(response.data.data);
             setName(response.data.name);
-            setVillId(response.data.vill_id);
+            setCollId(response.data.coll_id);
             setError(null);
         } catch (err) {
             setError(err.response?.data?.message || 'Error fetching data');
@@ -47,14 +47,14 @@ const WasteDataVillager = () => {
         const fetchOptions = async () => {
             setLoading(true);
             try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/v/waste-options?type=${type}`);
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/waste-options?type=${type}`);
                 if (response.status === 200) {
                     const opt = response.data.options || [];
                     if (opt.length > 0) {
                         setOptions(opt);
                         setAuth(true);
                         setMessage('');
-                        setVillId(response.data.vill_id);
+                        setCollId(response.data.coll_id);
 
                         if (!search || !opt.includes(search)) {
                             setSearch(opt[0]);
@@ -159,11 +159,11 @@ const WasteDataVillager = () => {
                                 <FaBars />
                             </button>
                             <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
-                                <li><Link className="dropdown-item" to="/v/wastepricevillager">ราคารับซื้อ</Link></li>
-                                <li><Link className="dropdown-item" to="/v/categoryvillager">วิธีการแยกชนิดขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/v/garbagetruckschedulevillager">ตารางรถเก็บขยะ</Link></li>
+                                <li><Link className="dropdown-item" to="/c/wastepricecollector">ราคารับซื้อ</Link></li>
+                                <li><Link className="dropdown-item" to="/c/categorycollector">วิธีการแยกชนิดขยะ</Link></li>
+                                <li><Link className="dropdown-item" to="/c/garbagetruckschedulecollector">ตารางรถเก็บขยะ</Link></li>
                                 <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
-                                <li><Link className="dropdown-item" to={`/v/profile-villager/${villId}`}>บัญชีผู้ใช้</Link></li>
+                                <li><Link className="dropdown-item" to={`/c/profile-collector/${collId}`}>บัญชีผู้ใช้</Link></li>
                                 <li><button className="dropdown-item text-danger" onClick={handleLogout}>ออกจากระบบ</button></li>
                             </ul>
                         </div>
@@ -235,10 +235,10 @@ const WasteDataVillager = () => {
 
                     {/* Footer */}
                     <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-                        <Link to="/v/homevillager" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-                        <Link to="/v/wastedatavillager" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-                        <Link to="/v/addingwastevillager" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
-                        <Link to="/v/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
+                        <Link to="/c/homecollector" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
+                        <Link to="/c/wastedatacollector" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
+                        <Link to="/c/addingwastecollector" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
+                        <Link to="/c/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
                     </footer>
                 </>
             ) : (
@@ -252,4 +252,4 @@ const WasteDataVillager = () => {
     );
 };
 
-export default WasteDataVillager;
+export default WasteDataCollector;
