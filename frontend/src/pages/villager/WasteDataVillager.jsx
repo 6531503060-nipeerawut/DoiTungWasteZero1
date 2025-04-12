@@ -23,7 +23,6 @@ const WasteDataVillager = () => {
     const [error, setError] = useState(null);
     const [options, setOptions] = useState([]);
 
-    // fetchData ใช้ useCallback เพื่อความเสถียร
     const fetchData = useCallback(async () => {
         try {
             let url = `${process.env.REACT_APP_BACKEND_URL}/v/wastedatavillager`;
@@ -40,9 +39,8 @@ const WasteDataVillager = () => {
             setData([]);
             setName('');
         }
-    }, [search, type]); // เพิ่ม type เข้าไปด้วย เพราะใช้ใน URL เช่นกัน
+    }, [search, type]);
 
-    // ใช้ useEffect สำหรับ fetchOptions เมื่อ type เปลี่ยน
     useEffect(() => {
         const fetchOptions = async () => {
             setLoading(true);
@@ -85,9 +83,8 @@ const WasteDataVillager = () => {
         };
 
         fetchOptions();
-    }, [type]); // เพิ่ม search เพื่อให้ ESLint ไม่เตือน (ไม่เป็นไรเพราะ setSearch ด้านใน)
+    }, [type, search]);
 
-    // ปิด dropdown เมื่อคลิกข้างนอก
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

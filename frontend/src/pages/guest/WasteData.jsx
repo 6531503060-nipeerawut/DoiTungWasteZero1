@@ -20,7 +20,6 @@ const WasteData = () => {
     const [error, setError] = useState(null);
     const [options, setOptions] = useState([]);
 
-    // fetchData ใช้ useCallback เพื่อความเสถียร
     const fetchData = useCallback(async () => {
         try {
             let url = `${process.env.REACT_APP_BACKEND_URL}/wastedata`;
@@ -36,9 +35,8 @@ const WasteData = () => {
             setData([]);
             setName('');
         }
-    }, [search, type]); // เพิ่ม type เข้าไปด้วย เพราะใช้ใน URL เช่นกัน
+    }, [search, type]);
 
-    // ใช้ useEffect สำหรับ fetchOptions เมื่อ type เปลี่ยน
     useEffect(() => {
         const fetchOptions = async () => {
             setLoading(true);
@@ -77,9 +75,8 @@ const WasteData = () => {
         };
 
         fetchOptions();
-    }, [type]); // เพิ่ม search เพื่อให้ ESLint ไม่เตือน (ไม่เป็นไรเพราะ setSearch ด้านใน)
-
-    // ปิด dropdown เมื่อคลิกข้างนอก
+    }, [type, search]);
+    
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
