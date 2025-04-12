@@ -30,7 +30,7 @@ const WasteDataCollector = () => {
             if (search) {
                 url += `?type=${type}&search=${search}`;
             }
-            const response = await axios.get(url);
+            const response = await axios.get(url, { withCredentials: true });
             setData(response.data.data);
             setName(response.data.name);
             setCollId(response.data.coll_id);
@@ -47,7 +47,7 @@ const WasteDataCollector = () => {
         const fetchOptions = async () => {
             setLoading(true);
             try {
-                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/waste-options?type=${type}`);
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/waste-options?type=${type}`, { withCredentials: true });
                 if (response.status === 200) {
                     const opt = response.data.options || [];
                     if (opt.length > 0) {
@@ -57,7 +57,9 @@ const WasteDataCollector = () => {
                         setCollId(response.data.coll_id);
 
                         if (!search || !opt.includes(search)) {
-                            setSearch(opt[0]);
+                            if (search !== opt[0]) {
+                                setSearch(opt[0]);
+                            }
                         }
                     } else {
                         setOptions([]);
@@ -83,14 +85,7 @@ const WasteDataCollector = () => {
         };
 
         fetchOptions();
-    }, [type, search]); // เพิ่ม search เพื่อให้ ESLint ไม่เตือน (ไม่เป็นไรเพราะ setSearch ด้านใน)
-
-    // useEffect สำหรับ fetchData เมื่อ search หรือ type เปลี่ยน
-    useEffect(() => {
-        if (search) {
-            fetchData();
-        }
-    }, [search, fetchData]);
+    }, [type]); // เพิ่ม search เพื่อให้ ESLint ไม่เตือน (ไม่เป็นไรเพราะ setSearch ด้านใน)
 
     // ปิด dropdown เมื่อคลิกข้างนอก
     useEffect(() => {
