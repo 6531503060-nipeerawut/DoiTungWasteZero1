@@ -7,19 +7,19 @@ import {
 import Home from "./pages/guest/Home";
 import WasteData from "./pages/guest/WasteData";
 import Dashboard from "./pages/guest/Dashboard";
-import WastePrice from "./pages/guest/WastePrice";
-import GarbageTruckSchedule from "./pages/guest/GarbageTruckSchedule";
-import WasteSeparation from "./pages/guest/WasteSeparation";
+import WastePrice from "./pages/guest/navbar/WastePrice";
+import GarbageTruckSchedule from "./pages/guest/navbar/GarbageTruckSchedule";
+import WasteCategory from "./pages/guest/navbar/WasteCategory";
 
 
 
-import BathroomWaste from "./pages/guest/category/BathroomWaste";
-import BigWaste from "./pages/guest/category/BigWaste";
-import ComposableWaste from "./pages/guest/category/ComposableWaste";
-import DirtyWaste from "./pages/guest/category/DirtyWaste";
-import EnergyRDFWaste from "./pages/guest/category/EnergyRDFWaste";
-import HazardousWaste from "./pages/guest/category/HazardousWaste";
-import SellWaste from "./pages/guest/category/SellWaste";
+import BathroomWaste from "./pages/guest/navbar/category/BathroomWaste";
+import BigWaste from "./pages/guest/navbar/category/BigWaste";
+import ComposableWaste from "./pages/guest/navbar/category/ComposableWaste";
+import DirtyWaste from "./pages/guest/navbar/category/DirtyWaste";
+import EnergyRDFWaste from "./pages/guest/navbar/category/EnergyRDFWaste";
+import HazardousWaste from "./pages/guest/navbar/category/HazardousWaste";
+import SellWaste from "./pages/guest/navbar/category/SellWaste";
 
 
 
@@ -88,7 +88,7 @@ const App = () => {
                     <Route path="/energyrdfwaste" element={<EnergyRDFWaste />} />
                     <Route path="/hazardouswaste" element={<HazardousWaste />} />
                     <Route path="/sellwaste" element={<SellWaste />} />
-                    <Route path="/category" element={<WasteSeparation />} />
+                    <Route path="/category" element={<WasteCategory />} />
                     
 
 

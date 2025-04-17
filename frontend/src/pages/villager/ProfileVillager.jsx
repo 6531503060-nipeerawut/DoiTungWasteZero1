@@ -239,8 +239,13 @@ const ProfileVillager = () => {
                                                         type="text"
                                                         className="form-control"
                                                         name="phone"
-                                                        value={formData.phone}
-                                                        onChange={handleChange}
+                                                        value={`0${String(formData.phone).replace(/^0/, '')}`}
+                                                        onChange={(e) =>
+                                                            setFormData({
+                                                                ...formData,
+                                                                phone: e.target.value.replace(/^0/, '')
+                                                            })
+                                                        }
                                                         placeholder="Enter phone number"
                                                     />
                                                 </div>

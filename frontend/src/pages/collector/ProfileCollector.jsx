@@ -174,7 +174,7 @@ const ProfileCollector = () => {
                                 />
                                 <p><strong>ชื่อ - นามสกุล:</strong> {profile.coll_fullName}</p>
                                 <p><strong>สถานะบัญชีผู้ใช้:</strong> {profile.role_name}</p>
-                                <p><strong>เบอร์โทรศัพท์:</strong> {`${profile.phone}`}</p>
+                                <p><strong>เบอร์โทรศัพท์:</strong> {`0${profile.phone}`}</p>
                                 <button onClick={() => setShowModal(true)} className="btn btn-primary">แก้ไขข้อมูล</button>
                             </div>
                         </div>
@@ -224,8 +224,13 @@ const ProfileCollector = () => {
                                                         type="text"
                                                         className="form-control"
                                                         name="phone"
-                                                        value={formData.phone}
-                                                        onChange={handleChange}
+                                                        value={`0${String(formData.phone).replace(/^0/, '')}`}
+                                                        onChange={(e) =>
+                                                            setFormData({
+                                                                ...formData,
+                                                                phone: e.target.value.replace(/^0/, '')
+                                                            })
+                                                        }
                                                         placeholder="Enter phone number"
                                                     />
                                                 </div>
