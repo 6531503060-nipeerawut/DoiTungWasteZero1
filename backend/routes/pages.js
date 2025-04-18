@@ -267,7 +267,7 @@ router.get('/verify',(req, res) => {
 });
 
 //get wasteprice
-router.get('/wasteprice', (req, res) => {
+router.get('/waste-price', (req, res) => {
     return res.status(200).json({ status: "success" });
   })
 
@@ -285,7 +285,7 @@ router.get('/BathroomWaste', (req, res) => {
     return res.status(200).json({ status: "success", name: req.name});
   });
 
-  router.get('/BigGarbage', (req, res) => {
+  router.get('/bigwaste', (req, res) => {
     return res.status(200).json({ status: "success"});
   });
   
@@ -305,6 +305,10 @@ router.get('/BathroomWaste', (req, res) => {
     return res.status(200).json({ status: "success" });
   });
 
+  router.get('/hazardouswaste', (req, res) => {
+    return res.status(200).json({ status: "success" });
+  })
+
   // Get all waste categories
 router.get('/category', (req, res) => {
     const search = req.query.search || '';
@@ -318,7 +322,7 @@ router.get('/category', (req, res) => {
         }
         return res.status(200).json({
             status: "success",
-            results: result,
+            results: result
         });
     });
   });;
