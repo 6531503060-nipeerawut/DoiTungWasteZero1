@@ -122,7 +122,7 @@ const WasteDataCollector = () => {
 
                     {/* Body */}
                     <div className="p-4">
-                        <h1 className="text-xl font-bold mb-4 text-center">จำนวนขยะที่ต้องการจะทิ้งแต่ละสถานที่</h1>
+                        <h1 className="text-xl font-bold mb-4 text-center">ปริมาณขยะที่ต้องการทิ้ง</h1>
 
                         <div className="flex items-center justify-center space-x-4 mb-4">
                             <label className="flex items-center space-x-2">

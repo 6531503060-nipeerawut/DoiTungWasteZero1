@@ -1,20 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaTrash, FaPlus, FaTachometerAlt, FaBars } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 axios.defaults.withCredentials = true;
 
-function WasteSeparationVillager() {
+function WasteCategoryVillager() {
     document.title = "DoiTung Zero-Waste";
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
-    const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const navigate = useNavigate();
     const [villId, setVillId] = useState(null);
 
     const [categories, setCategories] = useState([]);
@@ -42,28 +40,6 @@ function WasteSeparationVillager() {
     useEffect(() => {
         fetchCategories();
     }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownOpen(false);
-            }
-        };
-        if (isDropdownOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isDropdownOpen]);
-
-    const handleLogout = async () => {
-        try {
-            await axios.get(`${process.env.REACT_APP_BACKEND_URL}/logout`);
-            setAuth(false);
-            navigate('/login');
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
 
     if (loading) {
         return (
@@ -108,27 +84,8 @@ function WasteSeparationVillager() {
         <div className='container-fluid d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
-                    {/* Navbar */}
-                    <nav className="navbar navbar-light bg-light d-flex justify-content-between p-3">
-                        <span className="navbar-brand font-weight-bold">Doitung Zero - Waste</span>
-                        <div className="dropdown" ref={dropdownRef}>
-                            <button
-                                className="btn btn-secondary dropdown-toggle"
-                                type="button"
-                                onClick={() => setDropdownOpen(!isDropdownOpen)}
-                            >
-                                <FaBars />
-                            </button>
-                    <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
-                                <li><Link className="dropdown-item" to="/v/wastepricevillager">ราคารับซื้อ</Link></li>
-                                <li><Link className="dropdown-item" to="/v/categoryvillager">วิธีการแยกชนิดขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/v/garbagetruckschedulevillager">ตารางรถเก็บขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
-                                <li><Link className="dropdown-item" to={`/v/profile-villager/${villId}`}>บัญชีผู้ใช้</Link></li>
-                                <li><button className="dropdown-item text-danger" onClick={handleLogout}>ออกจากระบบ</button></li>
-                            </ul>
-                        </div>
-                    </nav>
+                    {/* Header */}
+                    <Header type="menu" villId={villId} />
 
                     {/* Body */}
                     <div className="p-6 max-w-6xl mx-auto">
@@ -172,13 +129,8 @@ function WasteSeparationVillager() {
                     </div>
 
 
-                     {/* Footer */}
-                    <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-                    <Link to="/v/homevillager" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-                    <Link to="/v/wastedatavillager" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-                    <Link to="/v/addingwastevillager" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
-                    <Link to="/v/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
-                    </footer>
+                    {/* Footer */}
+                    <Footer />
                 </>
             ) : (
                 <div className="d-flex flex-column align-items-center justify-content-center min-vh-100">
@@ -191,4 +143,4 @@ function WasteSeparationVillager() {
     );
 }
 
-export default WasteSeparationVillager;
+export default WasteCategoryVillager;

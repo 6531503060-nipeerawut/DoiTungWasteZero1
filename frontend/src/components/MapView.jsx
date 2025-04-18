@@ -34,6 +34,7 @@ const MapView = ({ locations, onSelect }) => {
                     className="btn btn-sm btn-primary mt-2"
                     onClick={(e) => {
                         e.stopPropagation();
+                        console.log("📍 Marker clicked:", loc.id);
                         onSelect(loc.id);
                     }}
                     >

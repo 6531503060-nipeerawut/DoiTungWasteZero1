@@ -69,11 +69,10 @@ router.get('/homecollector', verifyUser, (req, res) => {
     } else if (dataSet === 'agency') {
         conditions.push('l.type = "agency"');
     } else if (dataSet === 'all') {
-        // ถ้าเป็น 'all' ไม่ต้องกรองตามสถานที่
-        // ไม่ต้องเพิ่มเงื่อนไข
+        conditions.push('(l.type = "agency" OR l.type = "village")');
     }
 
-    if (dataSet !== 'all' && locationId) {
+    if (locationId) {
         conditions.push('l.id = ?');
         params.push(locationId);
     }
@@ -83,7 +82,7 @@ router.get('/homecollector', verifyUser, (req, res) => {
         params.push(date);
     } else if (mode === 'month') {
         conditions.push('MONTH(caw.caw_date) = ? AND YEAR(caw.caw_date) = ?');
-        const [month, year] = date.split('-');
+        const [year, month] = date.split('-');
         params.push(month, year);
     } else if (mode === 'year') {
         conditions.push('YEAR(caw.caw_date) = ?');
@@ -238,7 +237,7 @@ router.get('/addingwastecollector', verifyUser, (req, res) => {
 // Adding Waste Data from collectors
 router.post('/addingwastecollector', verifyUser, (req, res) => {
     const { caw_date, caw_wasteType, caw_subWasteType, caw_wasteTotal, caw_description, caw_location } = req.body;
-    const requiredFields = [caw_date, caw_wasteType, caw_subWasteType, caw_wasteTotal, caw_location];
+    const requiredFields = [caw_date, caw_wasteType, caw_wasteTotal, caw_location];
 
     if (requiredFields.some(field => {
         return field === undefined || field === null ||

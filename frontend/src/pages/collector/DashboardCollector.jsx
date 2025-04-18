@@ -91,18 +91,6 @@ function DashboardCollector() {
         fetchData();
     }, [dataSet]);
 
-    const displayDate = () => {
-        if (!date) return '';
-        
-        if (mode === 'day') {
-            return dayjs(date).format('DD/MM/BBBB');
-        } else if (mode === 'month') {
-            return dayjs(date).format('MM/BBBB');
-        } else if (mode === 'year') {
-            return `${parseInt(date) + 543}`;
-        }
-    };
-
     useEffect(() => {
         const fetchData = async () => {
             let formattedDate = date;
@@ -168,8 +156,8 @@ function DashboardCollector() {
                             <label>เลือกชุดข้อมูล:</label>
                             <select value={dataSet} onChange={e => setDataSet(e.target.value)} className="ml-2">
                             <option value="all">ตำบลแม่ฟ้าหลวงทั้งหมด</option>
-                            <option value="village">ตามหมู่บ้าน</option>
-                            <option value="agency">ตามหน่วยงาน</option>
+                            <option value="village">หมู่บ้าน</option>
+                            <option value="agency">หน่วยงาน</option>
                             </select>
                         </div>
 

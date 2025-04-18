@@ -35,7 +35,7 @@ function WasteCategory() {
         if (lower.includes('ขยะเปื้อน')) {
             return { image: '/images/logo192.png', link: '/dirtywaste' };
         }
-        if (lower.includes('ขยะขายได้')) {
+        if (lower.includes('วัสดุรีไซเคิล')) {
             return { image: '/images/recyclable.jpg', link: '/sellwaste' };
         }
         if (lower.includes('ย่อยสลาย')) {

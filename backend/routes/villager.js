@@ -48,66 +48,66 @@ const verifyUser = (req, res, next) => {
     }
 };
 
+// Home Villager
 router.get('/homevillager', verifyUser, (req, res) => {
     const { dataSet, locationId, mode, date, type } = req.query;
-  
+
     if (!date) return res.status(400).json({ error: "Date is required" });
-  
+
     let baseQuery = `SELECT wt.wasteType_name, SUM(caw.caw_wasteTotal) as total
     FROM collectorAddWeights caw
     JOIN wasteTypes wt ON caw.caw_wasteType = wt.wasteType_id
     JOIN locations l ON caw.caw_location = l.id`;
-  
+
     let conditions = [];
     let params = [];
-  
+
     if (dataSet === 'village') {
         conditions.push('l.type = "village"');
     } else if (dataSet === 'agency') {
         conditions.push('l.type = "agency"');
     } else if (dataSet === 'all') {
-        // ถ้าเป็น 'all' ไม่ต้องกรองตามสถานที่
-        // ไม่ต้องเพิ่มเงื่อนไข
+        conditions.push('(l.type = "agency" OR l.type = "village")');
     }
-  
-    if (dataSet !== 'all' && locationId) {
+
+    if (locationId) {
         conditions.push('l.id = ?');
         params.push(locationId);
     }
-  
+
     if (mode === 'day') {
         conditions.push('DATE(caw.caw_date) = ?');
         params.push(date);
     } else if (mode === 'month') {
         conditions.push('MONTH(caw.caw_date) = ? AND YEAR(caw.caw_date) = ?');
-        const [month, year] = date.split('-');
+        const [year, month] = date.split('-');
         params.push(month, year);
     } else if (mode === 'year') {
         conditions.push('YEAR(caw.caw_date) = ?');
         params.push(date);
     }
-  
+
     if (conditions.length > 0) {
         baseQuery += ' WHERE ' + conditions.join(' AND ');
     }
-  
+
     baseQuery += ' GROUP BY wt.wasteType_name';
-  
+
     db.query(baseQuery, params, (err, results) => {
         if (err) {
             return res.status(500).json({ error: err });
         }
         res.status(200).json({status: "success", results: results, vill_id: req.vill_id });
     });
-  });
-  
-  // Get locations by type for get Waste data using with home page
-  router.get('/home-locations', verifyUser, (req, res) => {
+});
+
+// Get locations by type for get Waste data using with home page
+router.get('/home-locations', verifyUser, (req, res) => {
     const { type } = req.query;
-  
+
     let query = 'SELECT * FROM locations ORDER BY id ASC';
     let params = [];
-  
+
     // Modify the query based on the 'type'
     if (type && type !== 'all') {
         if (!['village', 'agency'].includes(type)) {
@@ -116,7 +116,7 @@ router.get('/homevillager', verifyUser, (req, res) => {
         query = `SELECT * FROM locations WHERE type = ? ORDER BY id ASC`;
         params.push(type);
     }
-  
+
     // Execute the query
     db.query(query, params, (err, results) => {
         if (err) {
@@ -124,7 +124,7 @@ router.get('/homevillager', verifyUser, (req, res) => {
         }
         res.status(200).json({ status: "success", results: results, vill_id: req.vill_id });
     });
-  });
+});
 
 // Get Adding Waste Data from Villager
 router.get('/addingwastevillager', verifyUser, (req, res) => {
@@ -138,7 +138,7 @@ router.get('/addingwastevillager', verifyUser, (req, res) => {
 // Adding Waste Data from Villager
 router.post('/addingwastevillager', verifyUser, (req, res) => {
     const { vaw_date, vaw_wasteType, vaw_subWasteType, vaw_wasteTotal, vaw_description } = req.body;
-    const requiredFields = [vaw_date, vaw_wasteType, vaw_subWasteType, vaw_wasteTotal];
+    const requiredFields = [vaw_date, vaw_wasteType, vaw_wasteTotal];
 
     if (requiredFields.some(field => {
         return field === undefined || field === null ||

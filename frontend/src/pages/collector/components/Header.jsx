@@ -42,7 +42,7 @@ function Header({ type = 'default', collId }) {
                 </button>
                 <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
                     <li><Link className="dropdown-item" to="/c/wastepricecollector">ราคารับซื้อ</Link></li>
-                    <li><Link className="dropdown-item" to="/c/category">วิธีการแยกชนิดขยะ</Link></li>
+                    <li><Link className="dropdown-item" to="/c/category">ประเภทขยะ</Link></li>
                     <li><Link className="dropdown-item" to="/c/garbagetruckschedulecollector">ตารางรถเก็บขยะ</Link></li>
                     <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
                     <li><Link className="dropdown-item" to={`/c/profile-collector/${collId}`}>บัญชีผู้ใช้</Link></li>
@@ -65,7 +65,7 @@ function Header({ type = 'default', collId }) {
                 </button>
                 <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
                     <li><Link className="dropdown-item" to="/c/wastepricecollector">ราคารับซื้อ</Link></li>
-                    <li><Link className="dropdown-item" to="/c/category">วิธีการแยกชนิดขยะ</Link></li>
+                    <li><Link className="dropdown-item" to="/c/category">ประเภทขยะ</Link></li>
                     <li><Link className="dropdown-item" to="/c/garbagetruckschedulecollector">ตารางรถเก็บขยะ</Link></li>
                     <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
                     <li><Link className="dropdown-item" to={`/c/profile-collector/${collId}`}>บัญชีผู้ใช้</Link></li>

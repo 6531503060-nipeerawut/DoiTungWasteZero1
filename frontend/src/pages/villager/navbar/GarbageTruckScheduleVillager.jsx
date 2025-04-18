@@ -8,23 +8,23 @@ import Footer from '../components/Footer';
 
 axios.defaults.withCredentials = true;
 
-function GarbageTruckScheduleCollector() {
+function GarbageTruckScheduleVillager() {
     document.title = "DoiTung Zero-Waste";
     const [selectedDay, setSelectedDay] = useState(null);
 
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
-    const [collId, setcollId] = useState(null);
+    const [villId, setVillId] = useState(null);
 
     useEffect(() => {
         const fetchAuthStatus = async () => {
             try {
-                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/garbagetruckschedulecollector`, { withCredentials: true });
+                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/v/garbagetruckschedulevillager`, { withCredentials: true });
 
                 if (res.data.status?.toLowerCase() === "success") {
                     setAuth(true);
-                    setcollId(res.data.coll_id);
+                    setVillId(res.data.vill_id);
                 } else {
                     setAuth(false);
                     setMessage(res.data.error || "Unauthorized access");
@@ -75,7 +75,7 @@ function GarbageTruckScheduleCollector() {
             {auth ? (
                 <>
                     {/* Header */}
-                    <Header type="menu" collId={collId} />
+                    <Header type="menu" villId={villId} />
 
                     {/* Garbage Schedule */}
                     <div className="container my-4">
@@ -122,4 +122,4 @@ function GarbageTruckScheduleCollector() {
     );
 }
 
-export default GarbageTruckScheduleCollector;
+export default GarbageTruckScheduleVillager;

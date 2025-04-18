@@ -16,7 +16,6 @@ function AddingWasteCollector() {
     const navigate = useNavigate();
     const [collId, setCollId] = useState(null);
 
-    // สำหรับโชว์วันที่แบบไทยบนหน้าจอ
     const formatThaiDate = (date) => {
         const d = new Date(date);
         const day = d.getDate().toString().padStart(2, '0');
@@ -30,7 +29,6 @@ function AddingWasteCollector() {
 
     const [displayDate, setDisplayDate] = useState(formatThaiDate(today));
 
-    // สำหรับส่งไป backend (รูปแบบ MySQL: YYYY-MM-DD)
     const formatDateForMySQL = (date) => {
         const d = new Date(date);
         const year = d.getFullYear();
@@ -88,21 +86,41 @@ function AddingWasteCollector() {
     }, [fetchLocations]);
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+    
+        if (name === 'caw_wasteType') {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: value,
+                caw_subWasteType: value === '5' ? prevData.caw_subWasteType : '',
+            }));
+        } else {
+            setFormData({
+                ...formData,
+                [name]: value,
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        const dataToSend = {
+            ...formData,
+            caw_subWasteType: formData.caw_wasteType === '5' ? formData.caw_subWasteType : null,
+        };
     
         try {
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/c/addingwastecollector`, formData, { withCredentials: true });
+            const response = await axios.post(
+                `${process.env.REACT_APP_BACKEND_URL}/c/addingwastecollector`,
+                dataToSend,
+                { withCredentials: true }
+            );
+    
             if (response.data.status === 'success') {
-            alert('Data added successfully from collector');
-            navigate('/c/dashboard');
+                alert('Data added successfully from collector');
+                navigate('/c/dashboard');
             }
         } catch (err) {
             console.error('Submission error:', err);
@@ -194,29 +212,31 @@ function AddingWasteCollector() {
                                     <option value="2">02 ขยะห้องน้ำ</option>
                                     <option value="3">03 ขยะพลังงาน</option>
                                     <option value="4">04 ขยะอันตราย</option>
-                                    <option value="5">05 ขยะขายได้</option>
+                                    <option value="5">05 วัสดุรีไซเคิล</option>
                                     <option value="6">06 ขยะย่อยสลาย</option>
                                     <option value="7">07 ขยะชิ้นใหญ่</option>
                                 </select>
                             </div>
                             
                             {/* ประเภทขยะ (ย่อย) */}
-                            <div className="mb-3">
-                                <label className="form-label">ประเภทขยะ (ย่อย)*</label>
-                                <select
-                                    name="caw_subWasteType"
-                                    value={formData.caw_subWasteType}
-                                    onChange={handleChange}
-                                    required
-                                    className="form-select"
-                                >
-                                    <option value="" disabled>เลือกประเภทขยะย่อย</option>
-                                    <option value="1">01 ขวดแก้ว</option>
-                                    <option value="2">02 ขวดพลาสติกใส</option>
-                                    <option value="3">03 เหล็ก/โลหะ/สังกะสี/กระป๋องอลูมิเนียม</option>
-                                    <option value="4">04 กระดาษ</option>
-                                </select>
-                            </div>
+                            {formData.caw_wasteType === '5' && (
+                                <div className="mb-3">
+                                    <label className="form-label">ประเภทขยะ (ย่อย)*</label>
+                                    <select
+                                        name="caw_subWasteType"
+                                        value={formData.caw_subWasteType}
+                                        onChange={handleChange}
+                                        required
+                                        className="form-select"
+                                    >
+                                        <option value="" disabled>เลือกประเภทขยะย่อย</option>
+                                        <option value="1">01 ขวดแก้ว</option>
+                                        <option value="2">02 ขวดพลาสติกใส</option>
+                                        <option value="3">03 เหล็ก/โลหะ/สังกะสี/กระป๋องอลูมิเนียม</option>
+                                        <option value="4">04 กระดาษ</option>
+                                    </select>
+                                </div>
+                            )}
 
                             {/* น้ำหนักขยะ */}
                             <div className="mb-3">

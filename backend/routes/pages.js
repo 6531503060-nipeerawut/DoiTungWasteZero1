@@ -33,11 +33,10 @@ router.get('/', (req, res) => {
     } else if (dataSet === 'agency') {
         conditions.push('l.type = "agency"');
     } else if (dataSet === 'all') {
-        // ถ้าเป็น 'all' ไม่ต้องกรองตามสถานที่
-        // ไม่ต้องเพิ่มเงื่อนไข
+        conditions.push('(l.type = "agency" OR l.type = "village")');
     }
   
-    if (dataSet !== 'all' && locationId) {
+    if (locationId) {
         conditions.push('l.id = ?');
         params.push(locationId);
     }
@@ -47,7 +46,7 @@ router.get('/', (req, res) => {
         params.push(date);
     } else if (mode === 'month') {
         conditions.push('MONTH(caw.caw_date) = ? AND YEAR(caw.caw_date) = ?');
-        const [month, year] = date.split('-');
+        const [year, month] = date.split('-');
         params.push(month, year);
     } else if (mode === 'year') {
         conditions.push('YEAR(caw.caw_date) = ?');

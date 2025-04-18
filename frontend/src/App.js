@@ -26,22 +26,22 @@ import SellWaste from "./pages/guest/navbar/category/SellWaste";
 import HomeVillager from "./pages/villager/HomeVillager";
 import AddingWasteVillager from "./pages/villager/AddingWasteVillager";
 import WasteDataVillager from "./pages/villager/WasteDataVillager";
-import ProfileVillager from "./pages/villager/ProfileVillager";
+import ProfileVillager from "./pages/villager/navbar/ProfileVillager";
 import DashboardVillager from "./pages/villager/DashboardVillager";
-import WasteSeparationVillager from "./pages/villager/WasteSeparationVillager";
-import GarbageTruckScheduleVillager from "./pages/villager/GarbageTruckScheduleVillager";
-import WastepriceVillager from "./pages/villager/WastepriceVillager";
+import WasteCategoryVillager from "./pages/villager/navbar/WasteCategoryVillager";
+import GarbageTruckScheduleVillager from "./pages/villager/navbar/GarbageTruckScheduleVillager";
+import WastepriceVillager from "./pages/villager/navbar/WastepriceVillager";
 
 
 
 
-import BathroomWasteVillager from "./pages/villager/category/BathroomWasteVillager";
-import BigWasteVillager from "./pages/villager/category/BigWasteVillager";
-import ComposableWasteVillager from "./pages/villager/category/ComposableWasteVillager";
-import DirtyWasteVillager from "./pages/villager/category/DirtyWasteVillager";
-import EnergyRDFWasteVillager from "./pages/villager/category/EnergyRDFWasteVillager";
-import HazardousWasteVillager from "./pages/villager/category/HazardousWasteVillager";
-import SellWasteVillager from "./pages/villager/category/SellWasteVillager";
+import BathroomWasteVillager from "./pages/villager/navbar/category/BathroomWasteVillager";
+import BigWasteVillager from "./pages/villager/navbar/category/BigWasteVillager";
+import ComposableWasteVillager from "./pages/villager/navbar/category/ComposableWasteVillager";
+import DirtyWasteVillager from "./pages/villager/navbar/category/DirtyWasteVillager";
+import EnergyRDFWasteVillager from "./pages/villager/navbar/category/EnergyRDFWasteVillager";
+import HazardousWasteVillager from "./pages/villager/navbar/category/HazardousWasteVillager";
+import SellWasteVillager from "./pages/villager/navbar/category/SellWasteVillager";
 
 import HomeCollector from "./pages/collector/HomeCollector";
 import AddingWasteCollector from "./pages/collector/AddingWasteCollector";
@@ -101,7 +101,7 @@ const App = () => {
                     <Route path="/v/wastepricevillager" element={<WastepriceVillager />} />
 
                     <Route path="/v/bathroomwastevillager" element={<BathroomWasteVillager />} />
-                    <Route path="/v/categoryvillager" element={<WasteSeparationVillager />} />
+                    <Route path="/v/categoryvillager" element={<WasteCategoryVillager />} />
                     <Route path="/v/bigwastevillager" element={<BigWasteVillager />} />
                     <Route path="/v/composablewastevillager" element={<ComposableWasteVillager />} />
                     <Route path="/v/DirtyWasteVillager" element={<DirtyWasteVillager />} />

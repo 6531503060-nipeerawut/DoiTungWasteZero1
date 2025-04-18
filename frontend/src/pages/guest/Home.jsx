@@ -22,7 +22,7 @@ function Home() {
         setSelectedLocation(locationId);
         const query = new URLSearchParams({
             dataSet: type,
-            locationId: type === 'all' ? '' : locationId,
+            locationId: locationId,
             mode: mode,
             date: formatDateForAPI(date, mode)
         });
@@ -66,8 +66,22 @@ function Home() {
 
                     <input
                         type={mode === 'day' ? 'date' : mode === 'month' ? 'month' : 'number'}
-                        value={date}
-                        onChange={e => setDate(e.target.value)}
+                        value={
+                            mode === 'day'
+                                ? date
+                                : mode === 'month'
+                                    ? dayjs(date).format('YYYY-MM')
+                                    : dayjs(date).format('YYYY')
+                        }
+                        onChange={e => {
+                            let newDate = e.target.value;
+                            if (mode === 'month') {
+                                newDate += '-01';
+                            } else if (mode === 'year') {
+                                newDate += '-01-01';
+                            }
+                            setDate(newDate);
+                        }}
                     />
                 </div>
 
