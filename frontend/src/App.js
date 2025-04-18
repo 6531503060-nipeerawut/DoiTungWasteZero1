@@ -47,18 +47,18 @@ import HomeCollector from "./pages/collector/HomeCollector";
 import AddingWasteCollector from "./pages/collector/AddingWasteCollector";
 import WasteDataCollector from './pages/collector/WasteDataCollector';
 import DashboardCollector from './pages/collector/DashboardCollector';
-import ProfileCollector from './pages/collector/ProfileCollector';
-import GarbageTruckScheduleCollector from './pages/collector/GarbageTruckScheduleCollector';
-import WasteSeparationColledtor from './pages/collector/WasteSeparationCollector';
-import WastePriceCollector from './pages/collector/WastePriceCollector';
+import ProfileCollector from './pages/collector/navbar/ProfileCollector';
+import GarbageTruckScheduleCollector from './pages/collector/navbar/GarbageTruckScheduleCollector';
+import WasteCategoryCollector from './pages/collector/navbar/WasteCategoryCollector';
+import WastePriceCollector from './pages/collector/navbar/WastePriceCollector';
 
-import DirtyGarbage from './pages/collector/category/DirtyWasteCollector';
-import GarbageSell from './pages/collector/category/SellWasteCollector';
-import ComposableGarbage from './pages/collector/category/ComposableWasteCollector';
-import EnergyRDFgarbage from './pages/collector/category/EnergyRDFWasteCollector';
-import HazardousGarbage from './pages/collector/category/HazardousWasteCollector';
-import BathroomGarbage from './pages/collector/category/BathroomWasteCollector';
-import BigGarbage from './pages/collector/category/BigWasteCollector';
+import DirtyGarbage from './pages/collector/navbar/category/DirtyWasteCollector';
+import GarbageSell from './pages/collector/navbar/category/SellWasteCollector';
+import ComposableGarbage from './pages/collector/navbar/category/ComposableWasteCollector';
+import EnergyRDFgarbage from './pages/collector/navbar/category/EnergyRDFWasteCollector';
+import HazardousGarbage from './pages/collector/navbar/category/HazardousWasteCollector';
+import BathroomGarbage from './pages/collector/navbar/category/BathroomWasteCollector';
+import BigGarbage from './pages/collector/navbar/category/BigWasteCollector';
 
 
 
@@ -115,7 +115,7 @@ const App = () => {
                     <Route path="/c/dashboard" element={<DashboardCollector />} />
                     <Route path="/c/profile-collector/:coll_id" element={<ProfileCollector />} />
                     <Route path="/c/garbagetruckschedulecollector" element={<GarbageTruckScheduleCollector/>} />
-                    <Route path="/c/categorycollector" element={<WasteSeparationColledtor/>} />
+                    <Route path="/c/category" element={<WasteCategoryCollector/>} />
                     <Route path="/c/wastepricecollector" element={<WastePriceCollector />} />
 
                     <Route path="/c/DirtyGarbage" element={<DirtyGarbage />} />

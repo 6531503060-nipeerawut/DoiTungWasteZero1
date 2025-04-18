@@ -1,27 +1,25 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaTrash, FaPlus, FaTachometerAlt, FaBars } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import dayjs from 'dayjs';
 import buddhistEra from 'dayjs/plugin/buddhistEra';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+import WasteChart from '../../components/WasteChart';
+import { formatDateForDisplay } from '../../utils/formatDate';
+import Footer from './components/Footer';
+import Header from './components/Header';
 
 axios.defaults.withCredentials = true;
 
 dayjs.extend(buddhistEra);
-
-ChartJS.register(ArcElement, Tooltip, Legend);
 
 function DashboardCollector() {
     document.title = "DoiTung Zero-Waste";
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
-    const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
     const navigate = useNavigate();
     const [collId, setCollId] = useState(null);
 
@@ -137,34 +135,10 @@ function DashboardCollector() {
         fetchData();
     }, [dataSet, locationId, mode, date]);
 
-    const pieChartData = {
-        labels: wasteData.map(item => item.wasteType_name),
-        datasets: [{
-            data: wasteData.map(item => item.total),
-            backgroundColor: ['#924d24', '#bc6c25', '#dda15e', '#606c38', '#283618', '#588157', '#344e41']
-        }]
-    };
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownOpen(false);
-            }
-        };
-        if (isDropdownOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isDropdownOpen]);
-
-    const handleLogout = async () => {
-        try {
-            await axios.get(`${process.env.REACT_APP_BACKEND_URL}/logout`);
-            setAuth(false);
-            navigate('/login');
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
+    const modeLabels = {
+        day: 'ข้อมูลรายวัน',
+        month: 'ข้อมูลรายเดือน',
+        year: 'ข้อมูลรายปี'
     };
 
     if (loading) {
@@ -179,33 +153,14 @@ function DashboardCollector() {
         <div className='container-fluid d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
-                    {/* Navbar */}
-                    <nav className="navbar navbar-light bg-light d-flex justify-content-between p-3">
-                        <span className="navbar-brand font-weight-bold">Doitung Zero - Waste</span>
-                        <div className="dropdown" ref={dropdownRef}>
-                            <button
-                                className="btn btn-secondary dropdown-toggle"
-                                type="button"
-                                onClick={() => setDropdownOpen(!isDropdownOpen)}
-                            >
-                                <FaBars />
-                            </button>
-                            <ul className={`dropdown-menu dropdown-menu-end ${isDropdownOpen ? 'show' : ''}`}>
-                                <li><Link className="dropdown-item" to="/c/wastepricecollector">ราคารับซื้อ</Link></li>
-                                <li><Link className="dropdown-item" to="/c/categorycollector">วิธีการแยกชนิดขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/c/garbagetruckschedulecollector">ตารางรถเก็บขยะ</Link></li>
-                                <li><Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link></li>
-                                <li><Link className="dropdown-item" to={`/c/profile-collector/${collId}`}>บัญชีผู้ใช้</Link></li>
-                                <li><button className="dropdown-item text-danger" onClick={handleLogout}>ออกจากระบบ</button></li>
-                            </ul>
-                        </div>
-                    </nav>
+                    {/* Header */}
+                    <Header collId={collId} />
 
                     {/* Body */}
                     <div className="p-4 max-w-xl mx-auto">
                         <h2 className="text-xl font-bold mb-4">ปริมาณน้ำหนักขยะรวมตามแหล่งที่จัดเก็บ</h2>
                         <h5 className="text-muted mt-3">
-                            ข้อมูลวันที่: {displayDate()}
+                            {modeLabels[mode]}: {formatDateForDisplay(date, mode)}
                         </h5>
 
                         {/* Data Set Selector */}
@@ -261,22 +216,27 @@ function DashboardCollector() {
                             )}
                         </div>
 
-                        {/* Pie Chart */}
+                        {/* WasteChart */}
                         <div className="my-6">
-                            <Pie data={pieChartData} options={{
-                                plugins: {
-                                    tooltip: {
-                                    callbacks: {
-                                        label: function (context) {
-                                        const value = context.parsed;
-                                        const total = context.chart._metasets[context.datasetIndex].total;
-                                        const percentage = ((value / total) * 100).toFixed(2);
-                                        return `${context.label}: ${value.toLocaleString()} กก. (${percentage}%)`;
+                            {wasteData.length > 0 && (
+                                <WasteChart
+                                    data={wasteData}
+                                    options={{
+                                        plugins: {
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: function (context) {
+                                                        const value = context.raw;
+                                                        const total = context.chart._metasets[context.datasetIndex].total;
+                                                        const percentage = ((value / total) * 100).toFixed(2);
+                                                        return `${context.label}: ${value.toLocaleString()} กก. (${percentage}%)`;
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
-                                    }
-                                }
-                            }} />
+                                    }}
+                                />
+                            )}
                         </div>
 
                         {/* ถ้าไม่มีข้อมูลขยะ */}
@@ -295,12 +255,7 @@ function DashboardCollector() {
                     </div>
 
                     {/* Footer */}
-                    <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-                        <Link to="/c/homecollector" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-                        <Link to="/c/wastedatacollector" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-                        <Link to="/c/addingwastecollector" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
-                        <Link to="/c/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
-                    </footer>
+                    <Footer />
                 </>
             ) : (
                 <div className="d-flex flex-column align-items-center justify-content-center min-vh-100">
