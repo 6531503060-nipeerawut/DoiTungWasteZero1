@@ -300,7 +300,7 @@ router.get('/BathroomWaste', (req, res) => {
     return res.status(200).json({ status: "success" });
   });
 
-  router.get('/SellWaste', (req, res) => {
+  router.get('/RecycleWaste', (req, res) => {
     return res.status(200).json({ status: "success" });
   });
 

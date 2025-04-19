@@ -469,7 +469,7 @@ router.get('/dirtywastevillager', verifyUser, (req, res) => {
     return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
   });
   
-  router.get('/sellwastevillager', verifyUser, (req, res) => {
+  router.get('/recyclewastevillager', verifyUser, (req, res) => {
     if (!req.vill_id) {
         return res.status(400).json({ error: "coll_id is missing from the token" });
     }

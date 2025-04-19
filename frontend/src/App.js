@@ -19,7 +19,7 @@ import ComposableWaste from "./pages/guest/navbar/category/ComposableWaste";
 import DirtyWaste from "./pages/guest/navbar/category/DirtyWaste";
 import EnergyRDFWaste from "./pages/guest/navbar/category/EnergyRDFWaste";
 import HazardousWaste from "./pages/guest/navbar/category/HazardousWaste";
-import SellWaste from "./pages/guest/navbar/category/SellWaste";
+import RecycleWaste from "./pages/guest/navbar/category/RecycleWaste";
 
 
 
@@ -41,7 +41,7 @@ import ComposableWasteVillager from "./pages/villager/navbar/category/Composable
 import DirtyWasteVillager from "./pages/villager/navbar/category/DirtyWasteVillager";
 import EnergyRDFWasteVillager from "./pages/villager/navbar/category/EnergyRDFWasteVillager";
 import HazardousWasteVillager from "./pages/villager/navbar/category/HazardousWasteVillager";
-import SellWasteVillager from "./pages/villager/navbar/category/SellWasteVillager";
+import RecycleWasteVillager from "./pages/villager/navbar/category/RecycleWasteVillager";
 
 import HomeCollector from "./pages/collector/HomeCollector";
 import AddingWasteCollector from "./pages/collector/AddingWasteCollector";
@@ -53,7 +53,7 @@ import WasteCategoryCollector from './pages/collector/navbar/WasteCategoryCollec
 import WastePriceCollector from './pages/collector/navbar/WastePriceCollector';
 
 import DirtyGarbage from './pages/collector/navbar/category/DirtyWasteCollector';
-import GarbageSell from './pages/collector/navbar/category/SellWasteCollector';
+import RecycleWasteCollector from './pages/collector/navbar/category/RecycleWasteCollector';
 import ComposableGarbage from './pages/collector/navbar/category/ComposableWasteCollector';
 import EnergyRDFgarbage from './pages/collector/navbar/category/EnergyRDFWasteCollector';
 import HazardousGarbage from './pages/collector/navbar/category/HazardousWasteCollector';
@@ -81,13 +81,13 @@ const App = () => {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/waste-price" element={<WastePrice />} />
                     <Route path="/garbagetruckschedule" element={<GarbageTruckSchedule />} />
-                    <Route path="/bathroomwaste" element={<BathroomWaste />} />
+                    <Route path="/BathroomWaste" element={<BathroomWaste />} />
                     <Route path="/bigwaste" element={<BigWaste />} />
                     <Route path="/composablewaste" element={<ComposableWaste />} />
                     <Route path="/dirtywaste" element={<DirtyWaste />} />
-                    <Route path="/energyrdfwaste" element={<EnergyRDFWaste />} />
+                    <Route path="/EnergyRDFwaste" element={<EnergyRDFWaste />} />
                     <Route path="/hazardouswaste" element={<HazardousWaste />} />
-                    <Route path="/sellwaste" element={<SellWaste />} />
+                    <Route path="/RecycleWaste" element={<RecycleWaste />} />
                     <Route path="/category" element={<WasteCategory />} />
                     
 
@@ -107,7 +107,7 @@ const App = () => {
                     <Route path="/v/DirtyWasteVillager" element={<DirtyWasteVillager />} />
                     <Route path="/v/energyrdfwastevillager" element={<EnergyRDFWasteVillager />} />
                     <Route path="/v/hazardouswastevillager" element={<HazardousWasteVillager />} />
-                    <Route path="/v/sellwastevillager" element={<SellWasteVillager />} />
+                    <Route path="/v/recyclewastevillager" element={<RecycleWasteVillager />} />
                     
                     <Route path="/c/homecollector" element={<HomeCollector />} />
                     <Route path="/c/addingwastecollector"element={<AddingWasteCollector />} />
@@ -119,7 +119,7 @@ const App = () => {
                     <Route path="/c/wastepricecollector" element={<WastePriceCollector />} />
 
                     <Route path="/c/DirtyGarbage" element={<DirtyGarbage />} />
-                    <Route path="/c/GarbageSell" element={<GarbageSell/>} />
+                    <Route path="/c/RecycleWasteCollector" element={<RecycleWasteCollector/>} />
                     <Route path="/c/ComposableGarbage" element={<ComposableGarbage/>} />
                     <Route path="/c/EnergyRDFgarbage" element={<EnergyRDFgarbage/>} />
                     <Route path="/c/HazardousGarbage" element={<HazardousGarbage/>} />

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import MapView from '../../components/MapView';
@@ -8,6 +7,7 @@ import WasteChart from '../../components/WasteChart';
 import { formatDateForAPI } from '../../utils/formatDate';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import UnauthorizedMessage from '../../components/UnauthorizedMessage';
 import dayjs from 'dayjs';
 
 axios.defaults.withCredentials = true;
@@ -180,11 +180,7 @@ function HomeCollector() {
                     <Footer />
                 </>
             ) : (
-                <div className="d-flex flex-column align-items-center justify-content-center min-vh-100">
-                    <h3>{message}</h3>
-                    <h3>Login Now</h3>
-                    <Link to="/login" className='btn btn-primary'>Login</Link>
-                </div>
+                <UnauthorizedMessage message={message} />
             )}
         </div>
     );

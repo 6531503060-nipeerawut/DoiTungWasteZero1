@@ -458,7 +458,7 @@ router.get('/DirtyGarbage', verifyUser, (req, res) => {
   return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
 });
 
-router.get('/GarbageSell', verifyUser, (req, res) => {
+router.get('/RecycleWasteCollector', verifyUser, (req, res) => {
   if (!req.coll_id) {
       return res.status(400).json({ error: "coll_id is missing from the token" });
   }

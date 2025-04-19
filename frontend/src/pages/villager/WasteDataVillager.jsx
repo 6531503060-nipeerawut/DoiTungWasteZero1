@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import EditWasteModal from './components/EditWasteModal';
+import UnauthorizedMessage from '../../components/UnauthorizedMessage';
 
 axios.defaults.withCredentials = true;
 
@@ -256,11 +256,7 @@ const WasteDataVillager = () => {
                     <Footer />
                 </>
             ) : (
-                <div className="d-flex flex-column align-items-center justify-content-center min-vh-100">
-                    <h3>{message}</h3>
-                    <h3>Login Now</h3>
-                    <Link to="/login" className='btn btn-primary'>Login</Link>
-                </div>
+                <UnauthorizedMessage message={message} />
             )}
 
             {/* Modal edit data */}

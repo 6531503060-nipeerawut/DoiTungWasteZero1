@@ -5,8 +5,7 @@ import Footer from '../../components/Footer';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-
-function SellWaste() {
+function RecycleWaste() {
   document.title = "DoiTung Zero-Waste";
   
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -168,4 +167,4 @@ function CategoryDetail({ category, onBackClick }) {
   );
 }
 
-export default SellWaste;
+export default RecycleWaste;
