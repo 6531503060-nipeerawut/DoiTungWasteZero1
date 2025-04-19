@@ -125,7 +125,7 @@ router.get('/wastedata', (req, res) => {
         const query1 = `SELECT vaw_date, vaw_time, wasteTypes.wasteType_name, subWasteTypes.subWasteType_name, vaw_wasteTotal
             FROM villagerAddWeights
             JOIN wasteTypes ON villagerAddWeights.vaw_wasteType = wasteTypes.wasteType_id
-            JOIN subWasteTypes ON villagerAddWeights.vaw_subWasteType = subWasteTypes.subWasteType_id
+            LEFT JOIN subWasteTypes ON villagerAddWeights.vaw_subWasteType = subWasteTypes.subWasteType_id
             WHERE villagerAddWeights.vill_id = ?`;
   
         db.query(query1, [vill_id], (err, result) => {

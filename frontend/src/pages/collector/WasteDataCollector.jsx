@@ -174,7 +174,7 @@ const WasteDataCollector = () => {
                                                 <td className="px-4 py-2 border">{formatDate(item.vaw_date)}</td>
                                                 <td className="px-4 py-2 border">{formatTime(item.vaw_time)}</td>
                                                 <td className="px-4 py-2 border">{item.wasteType_name}</td>
-                                                <td className="px-4 py-2 border">{item.subWasteType_name}</td>
+                                                <td className="px-4 py-2 border">{item.subWasteType_name || ''}</td>
                                                 <td className="px-4 py-2 border">{item.vaw_wasteTotal}</td>
                                             </tr>
                                         ))
