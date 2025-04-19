@@ -67,6 +67,8 @@ import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import { ToastContainer } from "react-toastify";
 
+import NotFound from './pages/NotFound';
+
 const App = () => {
     return (
         <div className="App">
@@ -126,8 +128,8 @@ const App = () => {
                     <Route path="/c/BathroomGarbage" element={<BathroomGarbage/>} />
                     <Route path="/c/BigGarbage" element={<BigGarbage/>} />
                     
-                    
-                    
+                    {/* 404 Route - must be last */}
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </BrowserRouter>
         </div>

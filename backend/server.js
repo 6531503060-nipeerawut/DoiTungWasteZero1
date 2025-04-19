@@ -22,6 +22,10 @@ app.use("/", require("./routes/pages"));
 app.use("/v", require("./routes/villager"));
 app.use("/c", require("./routes/collector"));
 
+app.use((req, res, next) => {
+    res.status(404).json({ message: 'ไม่พบหน้าที่คุณต้องการ (404)' });
+});
+
 app.listen(PORT, () => {
     console.log(`Server started on PORT ${PORT}`);
 });
