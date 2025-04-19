@@ -71,7 +71,7 @@ function Register() {
                             <LockOutlinedIcon />
                         </Avatar>
                         <Typography component="h1" variant="h5">
-                            Register
+                            ลงทะเบียน
                         </Typography>
 
                         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
@@ -80,7 +80,7 @@ function Register() {
                                 required
                                 fullWidth
                                 id="fullName"
-                                label="Full Name"
+                                label="ชื่อ-นามสกุล"
                                 name="fullName"
                                 autoComplete="name"
                                 autoFocus
@@ -91,7 +91,7 @@ function Register() {
                                 required
                                 fullWidth
                                 id="phone"
-                                label="Phone Number"
+                                label="เบอร์โทรศัพท์"
                                 name="phone"
                                 autoComplete="phone"
                                 onChange={e => {
@@ -104,7 +104,7 @@ function Register() {
                                 required
                                 fullWidth
                                 name="password"
-                                label="Password"
+                                label="รหัสผ่าน"
                                 type={showPassword ? 'text' : 'password'}
                                 id="password"
                                 autoComplete="current-password"
@@ -124,11 +124,11 @@ function Register() {
                                 }}
                             />
                             <FormControl fullWidth margin="normal">
-                                <InputLabel id="role-label">Role</InputLabel>
+                                <InputLabel id="role-label">สถานะผู้ใช้งาน</InputLabel>
                                 <Select
                                     labelId="role-label"
                                     id="role"
-                                    value={values.role || ''}  // ป้องกัน error หาก role เป็น null
+                                    value={values.role || ''}
                                     onChange={e => setValues({ ...values, role: e.target.value })}
                                     displayEmpty
                                 >
@@ -142,7 +142,7 @@ function Register() {
                                 margin="normal"
                                 fullWidth
                                 id="descriptionRole"
-                                label="Description of role"
+                                label="ชื่อหมู่บ้านหรือหน่วยงาน"
                                 name="descriptionRole"
                                 autoComplete="descriptionRole"
                                 onChange={e => setValues({ ...values, descriptionRole: e.target.value })}
@@ -153,12 +153,12 @@ function Register() {
                                 variant="contained"
                                 sx={{ mt: 3, mb: 2 }}
                             >
-                                Register
+                                ลงทะเบียน
                             </Button>
                             <Grid container>
                                 <Grid item>
                                     <Link href="/login" variant="body2">
-                                        {"Already have an account? Log in"}
+                                        {"มีบัญชีอยู่แล้ว? เข้าสู่ระบบ"}
                                     </Link>
                                 </Grid>
                             </Grid>
