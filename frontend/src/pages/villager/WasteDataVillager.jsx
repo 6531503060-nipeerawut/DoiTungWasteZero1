@@ -5,8 +5,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import EditWasteModal from './components/EditWasteModal';
 
 axios.defaults.withCredentials = true;
+
 const WasteDataVillager = () => {
     document.title = "DoiTung Zero-Waste";
     const [auth, setAuth] = useState(false);
@@ -20,6 +22,7 @@ const WasteDataVillager = () => {
     const [name, setName] = useState('');
     const [error, setError] = useState(null);
     const [options, setOptions] = useState([]);
+    const [editData, setEditData] = useState(null);
 
     const fetchData = useCallback(async () => {
         try {
@@ -32,6 +35,7 @@ const WasteDataVillager = () => {
             setName(response.data.name);
             setVillId(response.data.vill_id);
             setError(null);
+            console.log('Fetched data:', response.data.data);
         } catch (err) {
             setError(err.response?.data?.message || 'Error fetching data');
             setData([]);
@@ -86,6 +90,59 @@ const WasteDataVillager = () => {
     const handleSearchSubmit = (event) => {
         event.preventDefault();
         fetchData();
+        console.log('villId from state:', villId);
+    };
+
+    const handleEdit = (item) => {
+        const data = {
+            vaw_id: item.vaw_id,
+            vaw_wasteType: item.vaw_wasteType?.toString(),
+            vaw_subWasteType: item.vaw_subWasteType?.toString() || '',
+            vaw_wasteTotal: item.vaw_wasteTotal,
+            vaw_date: item.vaw_date,
+            vaw_time: item.vaw_time
+        };
+    
+        console.log("Mapped editData:", data);
+        setEditData(data);
+    };
+
+    const handleUpdate = async (e) => {
+        console.log("editData before submit", editData);
+
+        if (
+            !editData.vaw_id ||
+            !villId ||
+            !editData.vaw_wasteType ||
+            editData.vaw_wasteTotal === '' ||
+            editData.vaw_wasteTotal === undefined ||
+            isNaN(editData.vaw_wasteTotal)
+        ) {
+            console.log("Validation failed:");
+            console.log("vaw_id:", editData.vaw_id);
+            console.log("villId:", villId);
+            console.log("wasteType:", editData.vaw_wasteType);
+            console.log("wasteTotal:", editData.vaw_wasteTotal, typeof editData.vaw_wasteTotal);
+            alert("Missing required fields(1)");
+            return;
+        }
+
+        try {
+            const payload = {
+                vaw_id: editData.vaw_id,
+                vill_id: villId,
+                vaw_wasteType: editData.vaw_wasteType,
+                vaw_subWasteType: editData.vaw_wasteType === '5' ? editData.vaw_subWasteType : null,
+                vaw_wasteTotal: Number(editData.vaw_wasteTotal)
+            };
+
+            await axios.put(`${process.env.REACT_APP_BACKEND_URL}/v/update-waste-villager`, payload, { withCredentials: true });
+            alert('อัปเดตสำเร็จ');
+            setEditData(null);
+            fetchData();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Update failed');
+        }
     };
 
     const formatDate = (dateString) => {
@@ -163,21 +220,32 @@ const WasteDataVillager = () => {
                                         <th className="px-4 py-2 border">ประเภทขยะ</th>
                                         <th className="px-4 py-2 border">ประเภทขยะ (ย่อย)</th>
                                         <th className="px-4 py-2 border">น้ำหนักขยะ (กก.)</th>
+                                        <th className="px-4 py-2 border">แก้ไขข้อมูล</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data.length === 0 ? (
-                                        <tr><td colSpan="5" className="text-center py-4">ไม่มีข้อมูล</td></tr>
+                                        <tr><td colSpan="6" className="text-center py-4">ไม่มีข้อมูล</td></tr>
                                     ) : (
-                                        data.map((item, index) => (
-                                            <tr key={index} className="text-center border-t">
-                                                <td className="px-4 py-2 border">{formatDate(item.vaw_date)}</td>
-                                                <td className="px-4 py-2 border">{formatTime(item.vaw_time)}</td>
-                                                <td className="px-4 py-2 border">{item.wasteType_name}</td>
-                                                <td className="px-4 py-2 border">{item.subWasteType_name}</td>
-                                                <td className="px-4 py-2 border">{item.vaw_wasteTotal}</td>
-                                            </tr>
-                                        ))
+                                        data.map((item, index) => {
+                                            console.log('item.vill_id:', item.vill_id);
+                                            return (
+                                                <tr key={index} className="text-center border-t">
+                                                    <td className="px-4 py-2 border">{formatDate(item.vaw_date)}</td>
+                                                    <td className="px-4 py-2 border">{formatTime(item.vaw_time)}</td>
+                                                    <td className="px-4 py-2 border">{item.wasteType_name}</td>
+                                                    <td className="px-4 py-2 border">{item.subWasteType_name || ''}</td>
+                                                    <td className="px-4 py-2 border">{item.vaw_wasteTotal}</td>
+                                                    <td className="px-4 py-2 border">
+                                                        {item.vill_id === villId && (
+                                                            <button className="btn btn-sm btn-warning" onClick={() => handleEdit(item)}>
+                                                                แก้ไขข้อมูล
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
@@ -194,6 +262,16 @@ const WasteDataVillager = () => {
                     <Link to="/login" className='btn btn-primary'>Login</Link>
                 </div>
             )}
+
+            {/* Modal edit data */}
+            <EditWasteModal
+                editData={editData}
+                onClose={() => setEditData(null)}
+                onChange={setEditData}
+                onSave={handleUpdate}
+                formatDate={formatDate}
+                formatTime={formatTime}
+            />
         </div>
     );
 };

@@ -215,10 +215,10 @@ router.get('/wastedatavillager', verifyUser, (req, res) => {
 
         const vill_id = villResult[0].vill_id;
 
-        const query1 = `SELECT vaw_date, vaw_time, wasteTypes.wasteType_name, subWasteTypes.subWasteType_name, vaw_wasteTotal
+        const query1 = `SELECT villagerAddWeights.vill_id, vaw_id, vaw_date, vaw_time, wasteTypes.wasteType_name, subWasteTypes.subWasteType_name, vaw_wasteTotal
             FROM villagerAddWeights
             JOIN wasteTypes ON villagerAddWeights.vaw_wasteType = wasteTypes.wasteType_id
-            JOIN subWasteTypes ON villagerAddWeights.vaw_subWasteType = subWasteTypes.subWasteType_id
+            LEFT JOIN subWasteTypes ON villagerAddWeights.vaw_subWasteType = subWasteTypes.subWasteType_id
             WHERE villagerAddWeights.vill_id = ?`;
 
         db.query(query1, [vill_id], (err, result) => {
@@ -279,6 +279,34 @@ router.get('/waste-options', verifyUser, (req, res) => {
         console.error('Unexpected error:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
+});
+
+// Update Waste data from villager added
+router.put('/update-waste-villager', verifyUser, (req, res) => {
+    const { vaw_id, vill_id, vaw_wasteType, vaw_subWasteType, vaw_wasteTotal } = req.body;
+
+    if (!vaw_id || !vill_id || !vaw_wasteType || !vaw_wasteTotal) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    if (req.vill_id !== vill_id) {
+        return res.status(403).json({ message: 'Permission denied' });
+    }
+
+    const query = `UPDATE villagerAddWeights
+        SET vaw_wasteType = ?,
+            vaw_subWasteType = ?,
+            vaw_wasteTotal = ?
+        WHERE vaw_id = ? AND vill_id = ?`;
+
+    db.query(query, [vaw_wasteType, vaw_subWasteType || null, vaw_wasteTotal, vaw_id, vill_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: 'Update data failed', error: err.sqlMessage || err });
+        }
+
+        return res.status(200).json({ status: "success", message: 'Update data successful', vill_id: req.vill_id });
+    });
 });
 
 // Profile Villager
