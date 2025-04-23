@@ -19,7 +19,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { MenuItem, Select, FormControl, InputLabel } from "@mui/material";
 
 function Register() {
-    document.title = "DoiTung Zero-Waste";
+    document.title = "Register";
+
     const [values, setValues] = useState({
         fullName: '',
         phone: '',
@@ -27,6 +28,7 @@ function Register() {
         role: '',
         descriptionRole: '',
     });
+
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
@@ -39,15 +41,15 @@ function Register() {
         axios.post(`${process.env.REACT_APP_BACKEND_URL}/register`, values)
             .then(res => {
                 if (res.data?.Status === "Success") {
-                    alert("Registration successful! You can now log in.");
+                    alert("ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ");
                     navigate('/login');
                 } else {
-                    alert(res.data?.Error || "An unknown error occurred.");
+                    alert(res.data?.Error || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
                 }
             })
             .catch(err => {
                 console.error("Registration Error: ", err);
-                alert("An error occurred during registration. Please try again.");
+                alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
             });
     };
 
@@ -56,25 +58,32 @@ function Register() {
     };
 
     return (
-        <Container maxWidth="sm">
-            <Box
-                sx={{
-                    marginTop: 10,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
-                <Card sx={{ boxShadow: 4 }}>
-                    <CardContent sx={{ m: 3 }}>
-                        <Avatar sx={{ m: 'auto', bgcolor: 'secondary.main' }}>
-                            <LockOutlinedIcon />
-                        </Avatar>
-                        <Typography component="h1" variant="h5">
-                            ลงทะเบียน
-                        </Typography>
+        <Box
+        sx={{
+            background: 'linear-gradient(to right, #e97e9b, #99b6ed)',
+            minHeight: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            }}
+        >
+            <Container maxWidth="sm">
+                <Card sx={{
+                    borderRadius: '1rem',
+                    boxShadow: 4,
+                    p: 3
+                }}>
+                    <CardContent>
+                        <Box sx={{ textAlign: 'center', mb: 2 }}>
+                            <Avatar sx={{ m: 'auto', bgcolor: '#e97e9b' }}>
+                                <LockOutlinedIcon />
+                            </Avatar>
+                            <Typography component="h1" variant="h5" sx={{ mt: 1 }}>
+                                ลงทะเบียน
+                            </Typography>
+                        </Box>
 
-                        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+                        <Box component="form" onSubmit={handleSubmit} noValidate>
                             <TextField
                                 margin="normal"
                                 required
@@ -83,7 +92,6 @@ function Register() {
                                 label="ชื่อ-นามสกุล"
                                 name="fullName"
                                 autoComplete="name"
-                                autoFocus
                                 onChange={e => setValues({ ...values, fullName: e.target.value })}
                             />
                             <TextField
@@ -112,25 +120,20 @@ function Register() {
                                 InputProps={{
                                     endAdornment: (
                                         <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={togglePasswordVisibility}
-                                                edge="end"
-                                                aria-label="toggle password visibility"
-                                            >
+                                            <IconButton onClick={togglePasswordVisibility} edge="end">
                                                 {showPassword ? <Visibility /> : <VisibilityOff />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
                                 }}
                             />
-                            <FormControl fullWidth margin="normal">
+                            <FormControl fullWidth margin="normal" required>
                                 <InputLabel id="role-label">สถานะผู้ใช้งาน</InputLabel>
                                 <Select
                                     labelId="role-label"
                                     id="role"
                                     value={values.role || ''}
                                     onChange={e => setValues({ ...values, role: e.target.value })}
-                                    displayEmpty
                                 >
                                     <MenuItem value="" disabled>เลือกบทบาทของคุณ</MenuItem>
                                     <MenuItem value="1">เจ้าหน้าที่เก็บขยะ</MenuItem>
@@ -151,11 +154,18 @@ function Register() {
                                 type="submit"
                                 fullWidth
                                 variant="contained"
-                                sx={{ mt: 3, mb: 2 }}
+                                sx={{
+                                    mt: 3,
+                                    mb: 2,
+                                    backgroundColor: '#e97e9b',
+                                    '&:hover': {
+                                        backgroundColor: '#d46e8b'
+                                    }
+                                }}
                             >
                                 ลงทะเบียน
                             </Button>
-                            <Grid container>
+                            <Grid container justifyContent="center">
                                 <Grid item>
                                     <Link href="/login" variant="body2">
                                         {"มีบัญชีอยู่แล้ว? เข้าสู่ระบบ"}
@@ -165,8 +175,8 @@ function Register() {
                         </Box>
                     </CardContent>
                 </Card>
-            </Box>
-        </Container>
+            </Container>
+        </Box>
     );
 }
 
