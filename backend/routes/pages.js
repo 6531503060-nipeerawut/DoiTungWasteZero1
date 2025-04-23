@@ -3,6 +3,7 @@ const express = require("express");
 const { login, verifyAdmin } = require("../controllers/login");
 const logout = require("../controllers/logout");
 const register = require("../controllers/register");
+const forgot = require('../controllers/forgotpassword');
 const router = express.Router();
 const upload = require("./upload");
 const db = require("./db-config");
@@ -14,6 +15,10 @@ router.get("/logout", logout);
 router.post("/login", login);
 router.post("/verifyAdmin", verifyAdmin)
 router.post("/register", upload.single('profileImage'), register);
+
+router.post('/request-otp', forgot.requestOtp);
+router.post('/verify-otp', forgot.verifyOtp);
+router.post('/reset-password', forgot.resetPassword);
 
 router.get('/', (req, res) => {
     const { dataSet, locationId, mode, date, type } = req.query;

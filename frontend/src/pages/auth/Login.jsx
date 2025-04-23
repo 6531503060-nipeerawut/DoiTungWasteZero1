@@ -162,7 +162,7 @@ function Login() {
                             </Button>
                             <Grid container justifyContent="space-between">
                                 <Grid item>
-                                    <Link href="/forgotPassword" variant="body2">
+                                    <Link href="/forgot-password" variant="body2">
                                         ลืมรหัสผ่าน?
                                     </Link>
                                 </Grid>
