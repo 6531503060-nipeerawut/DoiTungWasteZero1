@@ -69,6 +69,8 @@ import { ToastContainer } from "react-toastify";
 
 import NotFound from './pages/NotFound';
 
+import './App.css';
+
 const App = () => {
     return (
         <div className="App">
