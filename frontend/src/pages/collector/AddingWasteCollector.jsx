@@ -150,23 +150,25 @@ function AddingWasteCollector() {
     };
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
                     {/* Header */}
                     <Header collId={collId} />
 
                     {/* Body */}
-                    <div className="max-w-xl mx-auto mt-10 p-4 bg-white shadow-xl rounded-2xl">
-                        <h2 className="text-2xl font-bold mb-4">เพิ่มรายการน้ำหนักขยะ</h2>
-                        {error && <p className="text-red-500 mb-2">{error}</p>}
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="mb-3">
-                                <label className="form-label">วันที่เก็บขยะ*</label>
+                    <div className="container mt-4">
+                        <div className="card shadow-sm">
+                            <div className="card-body">
+                            <h2 className="text-center fw-bold mb-4">เพิ่มรายการน้ำหนักขยะ</h2>
+                            <form onSubmit={handleSubmit}>
+                                {/* วันที่ทิ้งขยะ */}
+                                <div className="mb-3">
+                                <label className="form-label">วันที่ทิ้งขยะ*</label>
                                 <input
                                     type="text"
-                                    name="caw_date"
-                                    value={displayDate}
+                                    name="vaw_date"
+                                    value={formData.vaw_date}
                                     onChange={handleChange}
                                     readOnly
                                     required
@@ -280,6 +282,8 @@ function AddingWasteCollector() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                    </div>
                     </div>
 
                     {/* Footer */}
