@@ -1,14 +1,65 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaTrash, FaTachometerAlt, FaPlus } from 'react-icons/fa';
+import { Box, IconButton } from '@mui/material';
 
 function Footer() {
     return (
-        <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-            <Link to="/c/homecollector" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-            <Link to="/c/wastedatacollector" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-            <Link to="/c/addingwastecollector" className="text-dark text-decoration-none"><FaPlus size={30} /></Link>
-            <Link to="/c/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
+        <footer style={{ backgroundColor: '#f4f4f4', padding: '8px 0', borderTop: '2px solid #e0e0e0', marginTop: 'auto' }}>
+            <Box
+                display="flex"
+                justifyContent="space-around"
+                alignItems="center"
+                width="100%"
+            >
+                <Link to="/c/homecollector" style={{ textDecoration: 'none' }}>
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' },
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaHome size={30} />
+                    </IconButton>
+                </Link>
+
+                <Link to="/c/wastedatacollector" style={{ textDecoration: 'none' }}>
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' },
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaTrash size={30} />
+                    </IconButton>
+                </Link>
+
+                <Link to="/c/addingwastecollector" style={{ textDecoration: 'none' }}>
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' },
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaPlus size={30} />
+                    </IconButton>
+                </Link>
+
+                <Link to="/c/dashboard" style={{ textDecoration: 'none' }}>
+                    <IconButton
+                        color="primary"
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' },
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaTachometerAlt size={30} />
+                    </IconButton>
+                </Link>
+            </Box>
         </footer>
     );
 }

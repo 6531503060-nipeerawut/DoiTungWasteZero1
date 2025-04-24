@@ -54,7 +54,7 @@ function BigGarbage() {
   ];
 
   return (
-    <div className='container-fluid d-flex flex-column min-vh-100'>
+    <div className='d-flex flex-column min-vh-100'>
       {auth ? (
         <>
           {/* Header */}

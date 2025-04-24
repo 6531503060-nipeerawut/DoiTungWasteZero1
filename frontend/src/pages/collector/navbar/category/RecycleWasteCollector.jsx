@@ -73,7 +73,7 @@ function RecycleWasteCollector() {
   useEffect(() => {
     const fetchAuthStatus = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/GarbageSell`);
+        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/sellwasteCollector`);
         if (res.data.status?.toLowerCase() === "success") {
           setAuth(true);
           if (Array.isArray(res.data.categories)) {
@@ -103,7 +103,7 @@ function RecycleWasteCollector() {
   }
 
   return (
-    <div className='container-fluid d-flex flex-column min-vh-100'>
+    <div className='d-flex flex-column min-vh-100'>
       {auth ? (
         <>
           {/* Header */}

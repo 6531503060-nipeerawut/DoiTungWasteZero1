@@ -92,55 +92,76 @@ function HomeCollector() {
     }
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
                     {/* Header */}
                     <Header collId={collId} />
 
-                    {/* Body */}
-                    <div className="dashboard">
-                        <h2>แผนที่แสดงจุดเก็บขยะ</h2>
+                    <div className="p-6 flex-1 bg-gray-100 rounded-lg shadow-lg">
+                        <h2 className="text-center fw-bold mb-4">แผนที่แสดงจุดเก็บขยะ</h2>
 
-                        {/* ตัวเลือกการกรอง */}
-                        <div className="my-3 d-flex gap-3">
-                            <select onChange={e => setType(e.target.value)} value={type} className="form-select w-auto">
-                                <option value="village">หมู่บ้าน</option>
-                                <option value="agency">หน่วยงาน</option>
-                                <option value="all">ทั้งหมด</option>
-                            </select>
+                        <div className="space-y-4 mb-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+                                <div className="flex items-center space-x-4">
+                                    <label htmlFor="type" className="text-sm font-medium">ประเภท:</label>
+                                    <select
+                                        id="type"
+                                        onChange={e => setType(e.target.value)}
+                                        value={type}
+                                        className="p-2 border rounded-md"
+                                    >
+                                        <option value="village">หมู่บ้าน</option>
+                                        <option value="agency">หน่วยงาน</option>
+                                        <option value="all">ทั้งหมด</option>
+                                    </select>
+                                </div>
 
-                            <select onChange={e => setMode(e.target.value)} value={mode} className="form-select w-auto">
-                                <option value="day">รายวัน</option>
-                                <option value="month">รายเดือน</option>
-                                <option value="year">รายปี</option>
-                            </select>
+                                <div className="flex items-center space-x-4">
+                                    <label htmlFor="mode" className="text-sm font-medium">ช่วงเวลา:</label>
+                                    <select
+                                        id="mode"
+                                        onChange={e => setMode(e.target.value)}
+                                        value={mode}
+                                        className="p-2 border rounded-md"
+                                    >
+                                        <option value="day">รายวัน</option>
+                                        <option value="month">รายเดือน</option>
+                                        <option value="year">รายปี</option>
+                                    </select>
+                                </div>
 
-                            <input
-                                type={mode === 'day' ? 'date' : mode === 'month' ? 'month' : 'number'}
-                                value={
-                                    mode === 'day'
-                                        ? date
-                                        : mode === 'month'
-                                            ? dayjs(date).format('YYYY-MM')
-                                            : dayjs(date).format('YYYY')
-                                }
-                                onChange={e => {
-                                    let newDate = e.target.value;
-                                    if (mode === 'month') {
-                                        newDate += '-01';
-                                    } else if (mode === 'year') {
-                                        newDate += '-01-01';
-                                    }
-                                    setDate(newDate);
-                                }}
-                            />
+                                <div className="flex items-center space-x-4">
+                                    <label htmlFor="date" className="text-sm font-medium">เลือกวันที่:</label>
+                                    <input
+                                        id="date"
+                                        type={mode === 'day' ? 'date' : mode === 'month' ? 'month' : 'number'}
+                                        value={
+                                            mode === 'day'
+                                                ? date
+                                                : mode === 'month'
+                                                    ? dayjs(date).format('YYYY-MM')
+                                                    : dayjs(date).format('YYYY')
+                                        }
+                                        onChange={e => {
+                                            let newDate = e.target.value;
+                                            if (mode === 'month') {
+                                                newDate += '-01';
+                                            } else if (mode === 'year') {
+                                                newDate += '-01-01';
+                                            }
+                                            setDate(newDate);
+                                        }}
+                                        className="p-2 border rounded-md"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
-                        {/* แผนที่ */}
+                        {/* Map View */}
                         <MapView locations={locations} onSelect={fetchWaste} />
 
-                        {/* กราฟวงกลม */}
+                        {/* Waste Chart */}
                         {wasteData.length > 0 && (
                             <WasteChart
                                 data={wasteData}
@@ -161,7 +182,7 @@ function HomeCollector() {
                             />
                         )}
 
-                        {/* ถ้าไม่มีข้อมูลขยะ */}
+                        {/* No Data Message */}
                         {wasteData.length === 0 && (
                             <p className="text-muted text-center mt-4">ไม่มีข้อมูลขยะสำหรับช่วงเวลานี้</p>
                         )}

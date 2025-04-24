@@ -53,22 +53,22 @@ function WasteCategoryCollector() {
     const getCategoryInfo = (name) => {
         const lower = name.toLowerCase();
         if (lower.includes('ขยะเปื้อน')) {
-            return { image: '/images/logo192.png', link: '/c/DirtyGarbage' };
+            return { image: '/images/logo192.jpg', link: '/c/DirtyGarbage' };
         }
-        if (lower.includes('ขยะขายได้')) {
-            return { image: '/images/organic.jpg', link: '/c/GarbageSell' };
+        if (lower.includes('วัสดุรีไซเคิล')) {
+            return { image: '/images/recyclable.jpg', link: '/c/GarbageSell' };
         }
         if (lower.includes('ขยะย่อยสลายได้')) {
-            return { image: '/images/hazardous.jpg', link: '/c/ComposableGarbage' };
+            return { image: '/images/compostable.jpg', link: '/c/ComposableGarbage' };
         }
         if (lower.includes('ขยะพลังงาน')) {
             return { image: '/images/energy.jpg', link: '/c/EnergyRDFGarbage' };
         }
         if (lower.includes('ขยะอันตราย')) {
-            return { image: '/images/Hazardous.jpg', link: '/c/HazardousGarbage' };
+            return { image: '/images/hazardous.jpeg', link: '/c/HazardousGarbage' };
         }
-        if (lower.includes('ขยะห้องน้ำ/ปนเปื้อน')) {
-            return { image: '/images/Bathroom.jpg', link: '/c/BathroomGarbage' };
+        if (lower.includes('ขยะห้องน้ำ')) {
+            return { image: '/images/bathroom.jpg', link: '/c/BathroomGarbage' };
         }
         if (lower.includes('ขยะชิ้นใหญ่')) {
             return { image: '/images/Big.jpg', link: '/c/BigGarbage' };
@@ -82,7 +82,7 @@ function WasteCategoryCollector() {
     };
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
                     {/* Header */}
