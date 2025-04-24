@@ -96,7 +96,7 @@ function HomeVillager() {
             {auth ? (
                 <>
                     {/* Header */}
-                    <Header />
+                    <Header villId={villId} />
 
                     <div className="p-6 flex-1 bg-gray-100 rounded-lg shadow-lg">
                         <h2 className="text-2xl font-semibold mb-6 text-center">แผนที่แสดงจุดเก็บขยะ</h2>

@@ -11,6 +11,7 @@ axios.defaults.withCredentials = true;
 function GarbageTruckScheduleVillager() {
     document.title = "DoiTung Zero-Waste";
     const [selectedDay, setSelectedDay] = useState(null);
+    const [showDetail, setShowDetail] = useState(false);
 
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -66,49 +67,103 @@ function GarbageTruckScheduleVillager() {
         },
     };
 
-    const handleClick = (day) => {
+    const handleDayClick = (day) => {
         setSelectedDay(day);
+        setShowDetail(true);
+    };
+
+    const handleBackClick = () => {
+        setShowDetail(false);
+    };
+
+    const renderMainScreen = () => {
+        return (
+            <div className="container my-4">
+                <h2 className="mb-4">📅 ตารางรถเก็บขยะ</h2>
+
+                <div className="row mb-4">
+                    <div className="col-6">
+                        <div className="card h-100" onClick={() => handleDayClick('Monday')} style={{ cursor: 'pointer' }}>
+                            <div className="card-header text-center fw-bold" style={{ backgroundColor: garbageData.Monday.headerColor }}>วันจันทร์</div>
+                            <div className="card-body text-center" style={{ backgroundColor: garbageData.Monday.color }}>
+                                <p className="card-text">ขยะเปื้อน</p>
+                                <p className="card-text">เปียกน้ำ</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-6">
+                        <div className="card h-100" onClick={() => handleDayClick('Tuesday')} style={{ cursor: 'pointer' }}>
+                            <div className="card-header text-center fw-bold fw-bold" style={{ backgroundColor: garbageData.Tuesday.headerColor }}>วันอังคาร</div>
+                            <div className="card-body text-center" style={{ backgroundColor: garbageData.Tuesday.color }}>
+                                <p className="card-text">ขยะเชื้อเพลิง</p>
+                                <p className="card-text">พลังงาน</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div className="row mb-4">
+                    <div className="col-6">
+                        <div className="card h-100" onClick={() => handleDayClick('Wednesday')} style={{ cursor: 'pointer' }}>
+                            <div className="card-header text-center fw-bold fw-bold" style={{ backgroundColor: garbageData.Wednesday.headerColor }}>วันพุธ</div>
+                            <div className="card-body text-center" style={{ backgroundColor: garbageData.Wednesday.color }}>
+                                <p className="card-text">ขยะห้องน้ำ</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-6">
+                        <div className="card h-100" onClick={() => handleDayClick('Friday')} style={{ cursor: 'pointer' }}>
+                            <div className="card-header text-center fw-bold fw-bold" style={{ backgroundColor: garbageData.Friday.headerColor }}>วันศุกร์</div>
+                            <div className="card-body text-center" style={{ backgroundColor: garbageData.Friday.color }}>
+                                <p className="card-text text-danger fw-bold">ขยะอันตราย</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderDetailScreen = () => {
+        const data = garbageData[selectedDay];
+        return (
+            <div className="container-fluid my-4">
+                <div className="card h-100">
+
+                    <div className="card-body" style={{ backgroundColor: data.color }}>
+                        <h5 className="card-title text-center mb-3">{data.heading}</h5>
+                        <ul className="list-disc ps-4">
+                            {data.examples.map((example, index) => (
+                                <li key={index} className="mb-1">{example}</li>
+                            ))}
+                        </ul>
+                        <div className="row g-2 mt-3">
+                            {data.images.map((image, index) => (
+                                <div key={index} className="col-12 col-md-6">
+                                    <img src={image} alt={`Example ${index + 1}`} className="img-fluid rounded" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="d-flex justify-content-start mt-3">
+                    <button className="btn btn-outline-secondary" onClick={handleBackClick}>
+                        <i className="bi bi-arrow-left"></i> กลับ
+                    </button>
+                </div>
+            </div>
+
+        );
     };
 
     return (
-        <div className='d-flex flex-column min-vh-100'>
+        <div className="d-flex flex-column min-vh-100">
             {auth ? (
                 <>
-                    {/* Header */}
                     <Header type="menu" villId={villId} />
-
-                    {/* Garbage Schedule */}
-                    <div className="container my-4">
-                        <h2 className="mb-4">📅 ตารางรถเก็บขยะ</h2>
-                        <div className="d-flex flex-wrap gap-2 mb-4">
-                            <button className="btn btn-outline-primary" onClick={() => handleClick('Monday')}>วันจันทร์</button>
-                            <button className="btn btn-outline-primary" onClick={() => handleClick('Tuesday')}>วันอังคาร</button>
-                            <button className="btn btn-outline-primary" onClick={() => handleClick('Wednesday')}>วันพุธ</button>
-                            <button className="btn btn-outline-primary" onClick={() => handleClick('Friday')}>วันศุกร์</button>
-                        </div>
-
-                        {selectedDay && (
-                            <div className="card shadow-sm">
-                                <div className="card-body">
-                                    <h5 className="card-title">📌 ข้อมูลวัน{{
-                                        Monday: 'จันทร์',
-                                        Tuesday: 'อังคาร',
-                                        Wednesday: 'พุธ',
-                                        Friday: 'ศุกร์'
-                                    }[selectedDay]}</h5>
-                                    <p><strong>ประเภทขยะ:</strong> {garbageData[selectedDay].type}</p>
-                                    <p><strong>ตัวอย่างขยะ:</strong></p>
-                                    <ul>
-                                        {garbageData[selectedDay].examples.map((item, index) => (
-                                            <li key={index}>- {item}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer */}
+                    {showDetail ? renderDetailScreen() : renderMainScreen()}
                     <Footer />
                 </>
             ) : (
@@ -116,6 +171,6 @@ function GarbageTruckScheduleVillager() {
             )}
         </div>
     );
-}
+};
 
 export default GarbageTruckScheduleVillager;

@@ -14,6 +14,7 @@ dayjs.extend(buddhistEra);
 
 function DashboardVillager() {
     document.title = "DoiTung Zero-Waste";
+    const [villId, setVillId] = useState(null);
     
     const [dataSet, setDataSet] = useState('all');
     const [locationId, setLocationId] = useState('');
