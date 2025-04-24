@@ -53,25 +53,25 @@ function WasteCategoryVillager() {
     const getCategoryInfo = (name) => {
         const lower = name.toLowerCase();
         if (lower.includes('ขยะเปื้อน')) {
-            return { image: '/images/logo192.png', link: '/v/DirtyWasteVillager' };
+            return { image: '/images/logo192.jpg', link: '/v/DirtyWasteVillager' };
         }
-        if (lower.includes('ขยะขายได้')) {
-            return { image: '/images/organic.jpg', link: '/v/sellwastevillager' };
+        if (lower.includes('วัสดุรีไซเคิล')) {
+            return { image: '/images/recyclable.jpg', link: '/v/sellwastevillager' };
         }
         if (lower.includes('ขยะย่อยสลายได้')) {
-            return { image: '/images/hazardous.jpg', link: '/v/composablewastevillager' };
+            return { image: '/images/compostable.jpg', link: '/v/composablewastevillager' };
         }
         if (lower.includes('ขยะพลังงาน')) {
             return { image: '/images/energy.jpg', link: '/v/energyrdfwastevillager' };
         }
         if (lower.includes('ขยะอันตราย')) {
-            return { image: '/images/Hazardous.jpg', link: '/v/hazardouswastevillager' };
+            return { image: '/images/hazardous.jpeg', link: '/v/hazardouswastevillager' };
         }
-        if (lower.includes('ขยะห้องน้ำ/ปนเปื้อน')) {
-            return { image: '/images/Bathroom.jpg', link: '/v/bathroomwastevillager' };
+        if (lower.includes('ขยะห้องน้ำ')) {
+            return { image: '/images/bathroom.jpg', link: '/v/bathroomwastevillager' };
         }
         if (lower.includes('ขยะชิ้นใหญ่')) {
-            return { image: '/images/Big.jpg', link: '/v/bigwastevillager' };
+            return { image: '/images/big.jpg', link: '/v/bigwastevillager' };
         }
         return { image: '/images/default.jpg', link: '#' };
     };
@@ -82,7 +82,7 @@ function WasteCategoryVillager() {
     };
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
                     {/* Header */}

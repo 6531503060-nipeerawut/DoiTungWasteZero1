@@ -14,19 +14,27 @@ function AddingWasteVillager() {
     const navigate = useNavigate();
     const [villId, setVillId] = useState(null);
 
-    const formatThaiDate = (date) => {
-        const d = new Date(date);
-        const day = d.getDate().toString().padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear() + 543;
-        return `${day}-${month}-${year}`;
+    // const formatThaiDate = (date) => {
+    //     const d = new Date(date);
+    //     const day = d.getDate().toString().padStart(2, '0');
+    //     const month = String(d.getMonth() + 1).padStart(2, '0');
+    //     const year = d.getFullYear() + 543;
+    //     return `${day}-${month}-${year}`;
+    // };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
     };
 
     const today = new Date();
     today.setHours(today.getHours() + 7);
 
     const [formData, setFormData] = useState({
-        vaw_date: formatThaiDate(today),
+        vaw_date: formatDate(today),
         vaw_wasteType: '',
         vaw_subWasteType: '',
         vaw_wasteTotal: '',
@@ -34,7 +42,7 @@ function AddingWasteVillager() {
     });
 
     useEffect(() => {
-        const formattedDate = formatThaiDate(new Date());
+        const formattedDate = formatDate(new Date());
         setFormData(prevData => ({ ...prevData, vaw_date: formattedDate }));
     
         axios.get(`${process.env.REACT_APP_BACKEND_URL}/v/addingwastevillager`, { withCredentials: true })
@@ -97,7 +105,7 @@ function AddingWasteVillager() {
         const today = new Date();
         today.setHours(today.getHours() + 7);
         setFormData({
-            vaw_date: formatThaiDate(today),
+            vaw_date: formatDate(today),
             vaw_wasteType: '',
             vaw_subWasteType: '',
             vaw_wasteTotal: '',
@@ -106,16 +114,16 @@ function AddingWasteVillager() {
     };
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
                     {/* Header */}
                     <Header villId={villId} />
 
                     <div className="container mt-4">
-                        <div className="card shadow-lg">
+                        <div className="card shadow-sm">
                             <div className="card-body">
-                            <h2 className="text-center mb-4">เพิ่มรายการน้ำหนักขยะ</h2>
+                            <h2 className="text-center fw-bold mb-4">เพิ่มรายการน้ำหนักขยะ</h2>
                             <form onSubmit={handleSubmit}>
                                 {/* วันที่ทิ้งขยะ */}
                                 <div className="mb-3">

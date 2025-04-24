@@ -115,30 +115,37 @@ const ProfileVillager = () => {
     }
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
-            {auth ? (
-                <>
-                    {/* Header */}
-                    <Header type="menu" villId={villId} />
+        <div className="d-flex flex-column min-vh-100 bg-light">
+        {auth ? (
+            <>
+                <Header type="menu" villId={villId} />
 
-                    {/* Body */}
-                    <div className="container mt-5">
-                        <h1 className="mb-4">บัญชีผู้ใช้</h1>
-                        <div className="row">
-                            <div className="mb-4">
-                                <img
-                                    src={`${process.env.REACT_APP_BACKEND_URL}/images/` + profile.vill_profileImage}
-                                    alt="Profile"
-                                    className="img-fluid rounded-circle"
-                                    style={{ width: '150px', borderRadius: '50%' }}
-                                />
-                                <p><strong>ชื่อ - นามสกุล:</strong> {profile.vill_fullName}</p>
-                                <p><strong>สถานะบัญชีผู้ใช้:</strong> {profile.role_name}</p>
-                                <p><strong>ชื่อหมู่บ้าน/ชื่อหน่วยงาน:</strong> {profile.vill_descriptionRole}</p>
-                                <p><strong>เบอร์โทรศัพท์:</strong> {`0${profile.phone}`}</p>
-                                <button onClick={() => setShowModal(true)} className="btn btn-primary">แก้ไขข้อมูล</button>
-                            </div>
+                {/* Centered Content */}
+                <div className="flex-grow-1 d-flex justify-content-center align-items-center">
+                    <div className="card shadow-sm border-0 p-4 bg-white rounded" style={{ maxWidth: '600px', width: '100%' }}>
+                        <h1 className="text-center fw-bold mb-4">บัญชีผู้ใช้</h1>
+                        <div className="text-center mb-4">
+                            <img
+                                src={`${process.env.REACT_APP_BACKEND_URL}/images/` + profile.vill_profileImage}
+                                alt="Profile"
+                                className="img-fluid mb-3 mx-auto d-block"
+                                style={{
+                                  width: '150px',
+                                  height: '150px',
+                                  objectFit: 'cover',
+                                  borderRadius: '50%',
+                                  border: '2px solid #ccc'
+                                }}
+                              />
+
+                            <p><strong>ชื่อ - นามสกุล:</strong> {profile.vill_fullName}</p>
+                            <p><strong>สถานะบัญชีผู้ใช้:</strong> {profile.role_name}</p>
+                            <p><strong>ชื่อหมู่บ้าน/ชื่อหน่วยงาน:</strong> {profile.vill_descriptionRole}</p>
+                            <p><strong>เบอร์โทรศัพท์:</strong> {`0${profile.phone}`}</p>
+                            <button onClick={() => setShowModal(true)} className="btn btn-primary">แก้ไขข้อมูล</button>
                         </div>
+                    </div>
+                </div>
 
                         {/* Modal for editing profile */}
                         {showModal && (
@@ -208,16 +215,14 @@ const ProfileVillager = () => {
                                                 </div>
                                                 <button type="submit" className="btn btn-success">Save Changes</button>
                                             </form>
-                                        </div>
-                                    </div>
+                                            </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                    
-                    {/* Footer */}
+                        </div>
+                    )}
+
                     <Footer />
-            </>
+                </>
             ) : (
                 <UnauthorizedMessage message={message} />
             )}
