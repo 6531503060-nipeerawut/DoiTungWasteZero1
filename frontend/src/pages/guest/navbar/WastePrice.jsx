@@ -23,6 +23,13 @@ function WastePrice() {
             <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-start">
                 <h1 className="mb-3" style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>ราคารับซื้อ</h1>
                 <p>ดูข้อมูลได้ที่นี่ <a href="https://wongpanit.com/" target="_blank" rel="noopener noreferrer">https://wongpanit.com/</a></p>
+                <iframe
+                    src="https://wongpanit.com/"
+                    width="100%"
+                    height="500px"
+                    frameBorder="0"
+                    title="Wongpanit Website"
+                ></iframe>
             </div>
 
             {/* Footer */}

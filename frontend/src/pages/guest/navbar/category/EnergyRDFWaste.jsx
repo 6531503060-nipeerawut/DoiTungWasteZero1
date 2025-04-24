@@ -29,7 +29,7 @@ function EnergyRDFWaste() {
     }, []);
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
                 <>
                     {/* Header */}
                     <Header type="menu" />

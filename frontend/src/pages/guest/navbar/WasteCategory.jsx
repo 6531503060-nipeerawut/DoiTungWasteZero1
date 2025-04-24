@@ -33,28 +33,27 @@ function WasteCategory() {
     const getCategoryInfo = (name) => {
         const lower = name.toLowerCase();
         if (lower.includes('ขยะเปื้อน')) {
-            return { image: '/images/logo192.png', link: '/dirtywaste' };
+            return { image: '/images/logo192.jpg', link: '/dirtywaste' };
         }
         if (lower.includes('วัสดุรีไซเคิล')) {
             return { image: '/images/recyclable.jpg', link: '/sellwaste' };
         }
-        if (lower.includes('ย่อยสลาย')) {
+        if (lower.includes('ขยะย่อยสลาย')) {
             return { image: '/images/compostable.jpg', link: '/composablewaste' };
         }
-        if (lower.includes('พลังงาน')) {
+        if (lower.includes('ขยะพลังงาน')) {
             return { image: '/images/energy.jpg', link: '/energyrdfwaste' };
         }
-        if (lower.includes('อันตราย')) {
-            return { image: '/images/hazardous.jpg', link: '/hazardouswaste' };
+        if (lower.includes('ขยะอันตราย')) {
+            return { image: '/images/hazardous.jpeg', link: '/hazardouswaste' };
         }
-        if (lower.includes('ห้องน้ำ') || lower.includes('ปนเปื้อน')) {
+        if (lower.includes('ขยะห้องน้ำ')) {
             return { image: '/images/bathroom.jpg', link: '/bathroomwaste' };
         }
-        if (lower.includes('ชิ้นใหญ่')) {
+        if (lower.includes('ขยะชิ้นใหญ่')) {
             return { image: '/images/big.jpg', link: '/bigwaste' };
         }
 
-        // 👇 เพิ่มชนิดย่อยของขยะขายได้
         if (lower.includes('พลาสติก')) {
             return { image: '/images/plastic.jpg', link: '/sellwaste/plastic' };
         }
@@ -77,13 +76,14 @@ function WasteCategory() {
     };
 
     return (
-        <div className='container-fluid d-flex flex-column min-vh-100'>
+        <div className='d-flex flex-column min-vh-100'>
             <>
+            <div className="flex flex-col h-screen">
                 {/* Header */}
                 <Header type="menu" />
 
                 {/* Body */}
-                <div className="p-6 max-w-6xl mx-auto">
+                <div className="p-6 max-w-6xl mx-auto overflow-y-auto">
                     <h1 className="text-2xl font-bold mb-4">ประเภทขยะ</h1>
 
                     <form onSubmit={handleSearch} className="mb-6 flex gap-3">
@@ -121,6 +121,7 @@ function WasteCategory() {
 
                 {/* Footer */}
                 <Footer />
+                </div>
             </>
         </div>
     );

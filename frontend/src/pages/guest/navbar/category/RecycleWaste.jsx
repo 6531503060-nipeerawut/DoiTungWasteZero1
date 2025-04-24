@@ -7,9 +7,9 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 function RecycleWaste() {
   document.title = "DoiTung Zero-Waste";
-  
+
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categories, ] = useState([
+  const [categories,] = useState([
     {
       id: 'plastic',
       name: 'พลาสติก',
@@ -44,7 +44,7 @@ function RecycleWaste() {
       id: 'paper',
       name: 'กระดาษ',
       image: '/images/paper.jpg',
-      items: [     'กระดาษแข็งสีน้ำตาล (กระดาษลูกฟูก)',
+      items: ['กระดาษแข็งสีน้ำตาล (กระดาษลูกฟูก)',
         'กระดาษย่อย ขาว/ดำ',
         'กระดาษย่อยรวม (เศษกระดาษ)'],
     },
@@ -52,7 +52,7 @@ function RecycleWaste() {
       id: 'metal',
       name: 'โลหะ',
       image: '/images/metal.jpg',
-      items: [    'กระป๋องอลูมิเนียม',
+      items: ['กระป๋องอลูมิเนียม',
         'กระป๋องเหล็ก',
         'เหล็กย่อย',
         'เหล็กหนา',
@@ -65,46 +65,34 @@ function RecycleWaste() {
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/sellwaste`)
-        .then(res => console.log(res.data))
-        .catch(err => console.log(err));
-}, []);
+      .then(res => console.log(res.data))
+      .catch(err => console.log(err));
+  }, []);
 
   return (
-    <div className='container-fluid d-flex flex-column min-vh-100'>
-        <>
-          {/* Header */}
-          <Header type="menu" />
-
-          <div className="flex flex-col min-h-screen bg-gray-100">
-            <div className="max-w-md mx-auto bg-gray-300 rounded-xl overflow-hidden shadow-lg pb-6">
-              <div className="w-full h-6 bg-gray-400 flex justify-center items-center">
-                <div className="w-16 h-1 bg-white rounded-full"></div>
-              </div>
-
-              <div className="p-2">
-                {selectedCategory ? (
-                  <CategoryDetail
-                    category={categories.find(cat => cat.id === selectedCategory)}
-                    onBackClick={() => setSelectedCategory(null)}
-                  />
-                ) : (
-                  <MainScreen
-                    categoryData={categories}
-                    onCategoryClick={setSelectedCategory}
-                  />
-                )}
-              </div>
-
-              <div className="mt-4 flex justify-center">
-                <div className="w-12 h-12 rounded-full bg-white"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <Footer />
-        </>
+    <div className="d-flex flex-column min-vh-100">
+    {/* Header */}
+    <Header type="menu" />
+  
+    {/* Main content */}
+    <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-start">
+    {selectedCategory ? (
+        <CategoryDetail
+          category={categories.find(cat => cat.id === selectedCategory)}
+          onBackClick={() => setSelectedCategory(null)}
+        />
+      ) : (
+        <MainScreen
+          categoryData={categories}
+          onCategoryClick={setSelectedCategory}
+        />
+      )}
     </div>
+  
+    {/* Footer */}
+    <Footer />
+  </div>
+  
   );
 }
 

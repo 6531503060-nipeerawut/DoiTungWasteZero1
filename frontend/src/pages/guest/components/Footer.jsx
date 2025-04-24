@@ -1,13 +1,52 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaTrash, FaTachometerAlt } from 'react-icons/fa';
+import { Box, IconButton } from '@mui/material';
 
 function Footer() {
     return (
-        <footer className="bg-light py-3 d-flex justify-content-around border-top mt-auto">
-            <Link to="/" className="text-dark text-decoration-none"><FaHome size={30} /></Link>
-            <Link to="/wastedata" className="text-dark text-decoration-none"><FaTrash size={30} /></Link>
-            <Link to="/dashboard" className="text-dark text-decoration-none"><FaTachometerAlt size={30} /></Link>
+        <footer style={{ backgroundColor: '#f4f4f4', padding: '8px 0', borderTop: '2px solid #e0e0e0', marginTop: 'auto' }}>            <Box 
+                display="flex" 
+                justifyContent="space-around" 
+                alignItems="center"
+                width="100%"  
+            >
+                <Link to="/" style={{ textDecoration: 'none' }}>
+                    <IconButton 
+                        color="primary" 
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' }, 
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaHome size={30} />
+                    </IconButton>
+                </Link>
+
+                <Link to="/wastedata" style={{ textDecoration: 'none' }}>
+                    <IconButton 
+                        color="primary" 
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' }, 
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaTrash size={30} />
+                    </IconButton>
+                </Link>
+
+                <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                    <IconButton 
+                        color="primary" 
+                        sx={{
+                            '&:hover': { transform: 'scale(1.2)', color: '#1976d2' }, 
+                            transition: 'transform 0.3s ease, color 0.3s ease'
+                        }}
+                    >
+                        <FaTachometerAlt size={30} />
+                    </IconButton>
+                </Link>
+            </Box>
         </footer>
     );
 }
