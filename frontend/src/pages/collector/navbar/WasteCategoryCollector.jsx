@@ -56,7 +56,7 @@ function WasteCategoryCollector() {
             return { image: '/images/logo192.jpg', link: '/c/DirtyGarbage' };
         }
         if (lower.includes('วัสดุรีไซเคิล')) {
-            return { image: '/images/recyclable.jpg', link: '/c/GarbageSell' };
+            return { image: '/images/recyclable.jpg', link: '/c/sellwasteCollector' };
         }
         if (lower.includes('ขยะย่อยสลายได้')) {
             return { image: '/images/compostable.jpg', link: '/c/ComposableGarbage' };
