@@ -21,8 +21,8 @@ function AddingWasteCollector() {
         const d = new Date(date);
         const day = d.getDate().toString().padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear() + 543;
-        return `${day}-${month}-${year}`;
+        const year = d.getFullYear(); // + 543
+        return `${day}/${month}/${year}`;
     };
 
     const today = new Date();
@@ -168,7 +168,7 @@ function AddingWasteCollector() {
                                 <input
                                     type="text"
                                     name="vaw_date"
-                                    value={formData.vaw_date}
+                                    value={displayDate}
                                     onChange={handleChange}
                                     readOnly
                                     required

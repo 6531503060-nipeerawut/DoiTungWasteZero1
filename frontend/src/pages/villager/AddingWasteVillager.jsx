@@ -71,9 +71,14 @@ function AddingWasteVillager() {
         }
     };
 
+    // const formatForDB = (date) => {
+    //     const [day, month, year] = date.split("-");
+    //     return `${parseInt(year) - 543}-${month}-${day}`;
+    // };
+
     const formatForDB = (date) => {
-        const [day, month, year] = date.split("-");
-        return `${parseInt(year) - 543}-${month}-${day}`;
+        const [day, month, year] = date.split("/");
+        return `${year}-${month}-${day}`;
     };
 
     const handleSubmit = (event) => {
