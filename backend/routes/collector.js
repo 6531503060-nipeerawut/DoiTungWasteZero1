@@ -371,7 +371,7 @@ router.get('/dashboard-locations', verifyUser, (req, res) => {
 router.get('/verify', verifyUser, (req, res) => {
     res.json({
         status: "success",
-        coll_id: req.coll_id,
+        coll_id: req.coll_id
     });
 });
 

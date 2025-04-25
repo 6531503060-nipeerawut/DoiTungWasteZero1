@@ -6,7 +6,6 @@ import buddhistEra from 'dayjs/plugin/buddhistEra';
 import React, { useEffect, useState } from 'react';
 
 import WasteChart from '../../components/WasteChart';
-import { formatDateForDisplay } from '../../utils/formatDate';
 import Footer from './components/Footer';
 import Header from './components/Header';
 
@@ -78,12 +77,6 @@ function Dashboard() {
         fetchData();
     }, [dataSet, locationId, mode, date]);
 
-    const modeLabels = {
-        day: 'ข้อมูลรายวัน',
-        month: 'ข้อมูลรายเดือน',
-        year: 'ข้อมูลรายปี'
-    };
-
     return (
         <div className="d-flex flex-column min-vh-100 bg-light">
             {/* Header */}
@@ -91,11 +84,8 @@ function Dashboard() {
 
             {/* Body */}
             <main className="container my-4 flex-grow-1">
-            <div className="card shadow-sm border-0 p-4 bg-white rounded">                    
+            <div className="card shadow-sm border-0 p-4 bg-white rounded">
                 <h2 className="text-center fw-bold mb-4">ปริมาณน้ำหนักขยะรวมตามแหล่งที่จัดเก็บ</h2>
-                    {/*<h5 className="text-gray-600 mb-6 text-center">
-                        {modeLabels[mode]}: {formatDateForDisplay(date, mode)}
-                    </h5>
 
                     {/* Data Set Selector */}
                     <div className="mb-4">

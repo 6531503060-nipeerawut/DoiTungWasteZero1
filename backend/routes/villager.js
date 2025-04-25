@@ -362,7 +362,6 @@ router.put('/update-profile-villager/:vill_id', verifyUser, upload.single('profi
     });
 });
 
-
 // Get Waste data from collector added
 router.get('/dashboard', verifyUser, (req, res) => {
     const { dataSet, locationId, mode, date } = req.query;
@@ -414,7 +413,6 @@ router.get('/dashboard', verifyUser, (req, res) => {
     });
 });
 
-
 // Get locations by type for get Waste data
 router.get('/dashboard-locations', verifyUser, (req, res) => {
     const { type } = req.query;
@@ -433,11 +431,11 @@ router.get('/dashboard-locations', verifyUser, (req, res) => {
     });
 });
 
-// verify user login before get data added from villager
+// verify user login before get data added from collector
 router.get('/verify', verifyUser, (req, res) => {
     res.json({
         status: "success",
-        vill_id: req.vill_id,
+        vill_id: req.vill_id
     });
 });
 
