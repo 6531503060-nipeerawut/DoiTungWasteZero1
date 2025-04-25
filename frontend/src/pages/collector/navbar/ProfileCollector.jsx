@@ -181,7 +181,7 @@ const ProfileCollector = () => {
                                                     />
                                                 </div>
                                                 <div className="form-group">
-                                                    <label>Phone</label>
+                                                    <label>เบอร์โทรศัพท์</label>
                                                     <input
                                                         type="text"
                                                         className="form-control"
@@ -196,7 +196,7 @@ const ProfileCollector = () => {
                                                         placeholder="Enter phone number"
                                                     />
                                                 </div>
-                                                <button type="submit" className="btn btn-success">Save Changes</button>
+                                                <button type="submit" className="btn btn-success">บันทึกข้อมูล</button>
                                             </form>
                                         </div>
                                     </div>
