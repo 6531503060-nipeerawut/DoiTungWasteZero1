@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { PieChart, Pie, Tooltip, Cell, Legend } from "recharts";
+import { PieChart, Pie, Tooltip, Cell } from "recharts";
 
 const defaultColorList = [
   "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8",
