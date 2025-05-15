@@ -67,6 +67,8 @@ import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import { ToastContainer } from "react-toastify";
 
+import HomeDashboardAdmin from "./pages/admin/HomeDashboardAdmin";
+
 import NotFound from './pages/NotFound';
 
 import './App.css';
@@ -129,6 +131,8 @@ const App = () => {
                     <Route path="/c/HazardousGarbage" element={<HazardousGarbage/>} />
                     <Route path="/c/BathroomGarbage" element={<BathroomGarbage/>} />
                     <Route path="/c/BigGarbage" element={<BigGarbage/>} />
+
+                    <Route path="/admin/all-waste-records" element={<HomeDashboardAdmin/>} />
                     
                     {/* 404 Route - must be last */}
                     <Route path="*" element={<NotFound />} />

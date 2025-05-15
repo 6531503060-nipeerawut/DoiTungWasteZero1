@@ -21,6 +21,7 @@ app.use(cors({
 app.use("/", require("./routes/pages"));
 app.use("/v", require("./routes/villager"));
 app.use("/c", require("./routes/collector"));
+app.use("/admin", require("./routes/admin"));
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'ไม่พบหน้าที่คุณต้องการ (404)' });

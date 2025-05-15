@@ -139,6 +139,7 @@ function Register() {
                                     <MenuItem value="1">เจ้าหน้าที่เก็บขยะ</MenuItem>
                                     <MenuItem value="2">ตัวแทนหน่วยงานราชการ</MenuItem>
                                     <MenuItem value="3">ตัวแทนหมู่บ้าน</MenuItem>
+                                    <MenuItem value="4">Admin</MenuItem>
                                 </Select>
                             </FormControl>
                             <TextField

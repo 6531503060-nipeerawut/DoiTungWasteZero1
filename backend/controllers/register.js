@@ -34,15 +34,15 @@ const register = (req, res) => {
                 const detailID = result.insertId;
 
                 if (role === "1") {
-                    const wasteCollectorSQL = "INSERT INTO collectors (`details_id`, `coll_fullName`, `coll_descriptionRole`, `coll_profileImage`) VALUES (?, ?, ?, ?)";
-                    db.query(wasteCollectorSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
+                    const collectorSQL = "INSERT INTO collectors (`details_id`, `coll_fullName`, `coll_descriptionRole`, `coll_profileImage`) VALUES (?, ?, ?, ?)";
+                    db.query(collectorSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
                         if (err) {
                             console.error("Error inserting into collectors", err);
                             return res.status(500).json({ Error: "Register Failed (1)" });
                         }
 
-                        const vill_id = result.insertId;
-                        const token = jwt.sign({ name: fullName, vill_id: vill_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+                        const coll_id = result.insertId;
+                        const token = jwt.sign({ name: fullName, coll_id: coll_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
 
                         return res.json({ Status: "Success", token: token });
                     });
@@ -51,11 +51,24 @@ const register = (req, res) => {
                     db.query(villagerSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
                         if (err) {
                             console.error("Error inserting into villagers", err);
-                            return res.status(500).json({ Error: "Register Failed (2)" });
+                            return res.status(500).json({ Error: "Register Failed (2 or 3)" });
                         }
 
                         const vill_id = result.insertId;
                         const token = jwt.sign({ name: fullName, vill_id: vill_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+                        
+                        return res.json({ Status: "Success", token: token });
+                    });
+                } else if (role === "4") {
+                    const adminSQL = "INSERT INTO admins (`details_id`, `admin_fullName`, `admin_descriptionRole`, `admin_profileImage`) VALUES (?, ?, ?, ?)";
+                    db.query(adminSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
+                        if (err) {
+                            console.error("Error inserting into admins", err);
+                            return res.status(500).json({ Error: "Register Failed (4)" });
+                        }
+
+                        const admin_id = result.insertId;
+                        const token = jwt.sign({ name: fullName, admin_id: admin_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
                         
                         return res.json({ Status: "Success", token: token });
                     });
