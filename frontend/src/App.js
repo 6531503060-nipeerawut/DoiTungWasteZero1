@@ -121,7 +121,7 @@ const App = () => {
                     <Route path="/c/dashboard" element={<DashboardCollector />} />
                     <Route path="/c/profile-collector/:coll_id" element={<ProfileCollector />} />
                     <Route path="/c/garbagetruckschedulecollector" element={<GarbageTruckScheduleCollector/>} />
-                    <Route path="/c/category" element={<WasteCategoryCollector/>} />
+                    <Route path="/c/categorycollector" element={<WasteCategoryCollector/>} />
                     <Route path="/c/wastepricecollector" element={<WastePriceCollector />} />
 
                     <Route path="/c/DirtyGarbage" element={<DirtyGarbage />} />

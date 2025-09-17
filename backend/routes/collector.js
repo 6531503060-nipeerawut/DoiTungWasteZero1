@@ -430,77 +430,76 @@ router.put('/update-profile-collector/:coll_id', verifyUser, upload.single('prof
 
 
 // Get all waste categories
-router.get('/category', verifyUser, (req, res) => {
-  const search = req.query.search || '';
-  const query = `SELECT * FROM waste_categories WHERE name LIKE ? OR description LIKE ?`;
-
-  const values = [`%${search}%`, `%${search}%`];
-
-  db.query(query, values, (err, result) => {
-      if (err) {
-          return res.status(500).json({ Error: err.message });
-      }
-      return res.status(200).json({
-          status: "success",
-          results: result,
-          coll_id: req.coll_id,
-      });
-  });
-});;
-
+router.get('/categorycollector', verifyUser, (req, res) => {
+    const search = req.query.search || '';
+    const query = `SELECT * FROM waste_categories WHERE name LIKE ? OR description LIKE ?`;
+  
+    const values = [`%${search}%`, `%${search}%`];
+  
+    db.query(query, values, (err, result) => {
+        if (err) {
+            return res.status(500).json({ Error: err.message });
+        }
+        return res.status(200).json({
+            status: "success",
+            results: result,
+            coll_id: req.coll_id,
+        });
+    });
+  });;
 
 //get all category
 
-router.get('/DirtyGarbage', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
-
-router.get('/sellwasteCollector', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
-
-router.get('/ComposableGarbage', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
-
-router.get('/EnergyRDFwaste', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
-
-router.get('/HazardousGarbage', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
-
-
-router.get('/BathroomGarbage', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
-
-
-router.get('/BigGarbage', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
-});
+router.get('/dirtywastecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
+  
+  router.get('/sellwastecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
+  
+  router.get('/composablegarbagecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "Coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
+  
+  router.get('/energyrdfwastecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "Coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
+  
+  router.get('/hazardouswastecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "Coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
+  
+  
+  router.get('/bathroomwastecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "Coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
+  
+  
+  router.get('/bigwastecollector', verifyUser, (req, res) => {
+    if (!req.Coll_id) {
+        return res.status(400).json({ error: "Coll_id is missing from the token" });
+    }
+    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
+  });
 
 
 //get GarbageTruckSchedule

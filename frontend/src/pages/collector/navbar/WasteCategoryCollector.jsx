@@ -21,10 +21,10 @@ function WasteCategoryCollector() {
 
     const fetchCategories = async (searchQuery = '') => {
         try {
-            const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/category`, { params: { search: searchQuery }, withCredentials: true });
+            const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/categorycollector`, { params: { search: searchQuery }, withCredentials: true });
             if (res.data.status?.toLowerCase() === "success") {
                 setAuth(true);
-                setCollId(res.data.coll_id);
+                setCollId(res.data.Coll_id);
                 setCategories(res.data.results);
             } else {
                 setAuth(false);
@@ -39,16 +39,16 @@ function WasteCategoryCollector() {
     };
 
     useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="d-flex justify-content-center align-items-center min-vh-100">
-                <h3>Loading...</h3>
-            </div>
-        );
-    }
+            fetchCategories();
+        }, []);
+    
+        if (loading) {
+            return (
+                <div className="d-flex justify-content-center align-items-center min-vh-100">
+                    <h3>Loading...</h3>
+                </div>
+            );
+        }
 
     const getCategoryInfo = (name) => {
         const lower = name.toLowerCase();
@@ -75,62 +75,66 @@ function WasteCategoryCollector() {
         }
         return { image: '/images/default.jpg', link: '#' };
     };
-    
+
     const handleSearch = (e) => {
         e.preventDefault();
         fetchCategories(search);
     };
 
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <h3>Loading...</h3>
+            </div>
+        );
+    }
+
     return (
         <div className='d-flex flex-column min-vh-100'>
             {auth ? (
                 <>
-                    {/* Header */}
                     <Header type="menu" collId={collId} />
 
-                    {/* Body */}
                     <div className="p-6 max-w-6xl mx-auto">
                         <h1 className="text-2xl font-bold mb-4">ประเภทขยะ</h1>
 
                         <form onSubmit={handleSearch} className="mb-6 flex gap-3">
                             <input
-                            type="text"
-                            placeholder="ค้นหา..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="border px-4 py-2 rounded w-full"
+                                type="text"
+                                placeholder="ค้นหา..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="border px-4 py-2 rounded w-full"
                             />
                             <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded">
-                            ค้นหา
+                                ค้นหา
                             </button>
                         </form>
 
-                        {loading ? (
-                            <p>กำลังโหลด...</p>
+                        {categories.length === 0 ? (
+                            <p className="text-gray-600">ไม่พบประเภทขยะ</p>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            {categories.map((cat) => {
-                                const { image, link } = getCategoryInfo(cat.name);
-                                return (
-                                <div key={cat.category_id} className="border rounded-xl shadow hover:shadow-lg transition p-4">
-                                    <h2 className="text-xl font-semibold mb-1">{cat.name}</h2>
-                                    <Link to={link}>
-                                    <img
-                                        src={image}
-                                        alt={cat.name}
-                                        className="w-full h-48 object-cover rounded-md mb-3 cursor-pointer"
-                                    />
-                                    </Link>
-                                    <p className="text-gray-600">{cat.description}</p>
-                                </div>
-                                );
-                            })}
+                                {categories.map((cat) => {
+                                    const { image, link } = getCategoryInfo(cat.name);
+                                    return (
+                                        <div key={cat.category_id} className="border rounded-xl shadow hover:shadow-lg transition p-4">
+                                            <h2 className="text-xl font-semibold mb-1">{cat.name}</h2>
+                                            <Link to={link}>
+                                                <img
+                                                    src={image}
+                                                    alt={cat.name}
+                                                    className="w-full h-48 object-cover rounded-md mb-3 cursor-pointer"
+                                                />
+                                            </Link>
+                                            <p className="text-gray-600">{cat.description}</p>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
 
-
-                    {/* Footer */}
                     <Footer />
                 </>
             ) : (

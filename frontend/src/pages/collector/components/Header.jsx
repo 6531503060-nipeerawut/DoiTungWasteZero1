@@ -43,7 +43,7 @@ function Header({ type = 'default', collId }) {
 
     const navLinks = [
         { to: '/c/wastepricecollector', label: 'ราคารับซื้อ' },
-        { to: '/c/category', label: 'ประเภทขยะ' },
+        { to: '/c/categorycollector', label: 'ประเภทขยะ' },
         { to: '/c/garbagetruckschedulecollector', label: 'ตารางรถเก็บขยะ' },
         { to: '/carbons', label: 'คำนวณคาร์บอน' },
         { to: `/c/profile-collector/${collId}`, label: 'บัญชีผู้ใช้' }
