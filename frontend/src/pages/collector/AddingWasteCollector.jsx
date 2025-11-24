@@ -21,7 +21,7 @@ function AddingWasteCollector() {
     const d = new Date(date);
     const day = d.getDate().toString().padStart(2, "0");
     const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear(); // + 543
+    const year = d.getFullYear(); // + 543 ถ้าอยากใช้ พ.ศ.
     return `${day}/${month}/${year}`;
   };
 
@@ -51,14 +51,18 @@ function AddingWasteCollector() {
   const [isVillage, setIsVillage] = useState(true);
   const [error, setError] = useState("");
 
+  // Excel upload popup state
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+
   useEffect(() => {
-    const today = new Date();
-    today.setHours(today.getHours() + 7);
+    const t = new Date();
+    t.setHours(t.getHours() + 7);
     setFormData((prev) => ({
       ...prev,
-      caw_date: formatDateForMySQL(today),
+      caw_date: formatDateForMySQL(t),
     }));
-    setDisplayDate(formatThaiDate(today));
+    setDisplayDate(formatThaiDate(t));
   }, [isVillage]);
 
   const fetchLocations = useCallback(async () => {
@@ -133,6 +137,36 @@ function AddingWasteCollector() {
     }
   };
 
+  // อัปโหลด Excel: แทนที่ข้อมูลทุกเดือนที่อยู่ในไฟล์นี้เลย
+  const uploadExcel = async () => {
+    try {
+      if (!excelFile) {
+        alert("กรุณาเลือกไฟล์ Excel");
+        return;
+      }
+
+      const form = new FormData();
+      form.append("file", excelFile);
+
+      const res = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/c/upload-excel`,
+        form,
+        { withCredentials: true }
+      );
+
+      alert("อัปโหลดไฟล์ Excel สำเร็จ");
+      setShowUploadPopup(false);
+      setExcelFile(null);
+      navigate("/c/dashboard");
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(
+        err.response?.data?.error ||
+          "อัปโหลดไม่สำเร็จ กรุณาตรวจสอบไฟล์อีกครั้ง"
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center min-vh-100">
@@ -167,12 +201,32 @@ function AddingWasteCollector() {
                 <h2 className="text-center fw-bold mb-4">
                   เพิ่มรายการน้ำหนักขยะ
                 </h2>
+
+                {/* ปุ่มบวกสำหรับอัปโหลด Excel */}
+                <div className="d-flex justify-content-end mb-3">
+                  <button
+                    type="button"
+                    className="btn btn-success rounded-circle"
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      fontSize: "28px",
+                      padding: 0,
+                    }}
+                    onClick={() => setShowUploadPopup(true)}
+                    title="อัปโหลดไฟล์ Excel (แทนที่ข้อมูลทั้งเดือน)"
+                  >
+                    +
+                  </button>
+                </div>
+
                 <form onSubmit={handleSubmit}>
                   {error && (
                     <div className="alert alert-danger" role="alert">
                       {error}
                     </div>
                   )}
+
                   {/* วันที่ทิ้งขยะ */}
                   <div className="mb-3">
                     <label className="form-label">วันที่ทิ้งขยะ*</label>
@@ -180,20 +234,20 @@ function AddingWasteCollector() {
                       type="text"
                       name="vaw_date"
                       value={displayDate}
-                      onChange={handleChange}
                       readOnly
                       required
                       className="form-control"
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-semibold mb-1">สถานที่</label>
+                  {/* สถานที่ */}
+                  <div className="mb-3">
+                    <label className="form-label">สถานที่</label>
                     <select
                       onChange={(e) =>
                         setIsVillage(e.target.value === "village")
                       }
-                      className="w-full border px-3 py-2 rounded mb-2"
+                      className="form-select mb-2"
                     >
                       <option value="village">หมู่บ้าน</option>
                       <option value="agency">หน่วยงาน</option>
@@ -203,7 +257,7 @@ function AddingWasteCollector() {
                       name="caw_location"
                       value={formData.caw_location}
                       onChange={handleChange}
-                      className="w-full border px-3 py-2 rounded"
+                      className="form-select"
                       required
                     >
                       <option value="" disabled>
@@ -312,6 +366,46 @@ function AddingWasteCollector() {
               </div>
             </div>
           </div>
+
+          {/* Popup อัปโหลดไฟล์ Excel */}
+          {showUploadPopup && (
+            <div
+              className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+              style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}
+            >
+              <div className="bg-white p-4 rounded shadow" style={{ width: 360 }}>
+                <h5 className="fw-bold mb-3">อัปโหลดไฟล์ Excel</h5>
+                <p className="mb-2">
+                  ระบบจะอ่านทุกแผ่น (sheet) ในไฟล์ และแทนที่ข้อมูลของแต่ละเดือนทั้งหมด
+                </p>
+
+                <div className="mb-3">
+                  <label className="form-label">เลือกไฟล์ Excel</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept=".xlsx,.xls"
+                    onChange={(e) => setExcelFile(e.target.files[0])}
+                  />
+                </div>
+
+                <div className="d-flex justify-content-end gap-2">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowUploadPopup(false);
+                      setExcelFile(null);
+                    }}
+                  >
+                    ยกเลิก
+                  </button>
+                  <button className="btn btn-success" onClick={uploadExcel}>
+                    อัปโหลด
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <Footer />

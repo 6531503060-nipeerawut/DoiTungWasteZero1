@@ -5,6 +5,147 @@ const jwt = require("jsonwebtoken");
 const db = require("./db-config");
 const upload = require("./upload");
 
+const multer = require("multer");
+const XLSX = require("xlsx");
+const util = require("util");
+const uploadExcel = multer({ storage: multer.memoryStorage() });
+
+
+const query = util.promisify(db.query).bind(db);
+
+// 1) FIX DATE SHIFT (No timezone problem)
+function excelDayToDate(dayNumber, year, month) {
+    const d = parseInt(dayNumber, 10);
+    return `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+// 2) NORMALIZE VILLAGE NAME
+function normalizeVillageName(name) {
+    return name
+        .replace(/บ้าน|หมู่บ้าน|หมู่ที่|หมู่|บ\.|ม\./g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+// 3) EXTRACT MOO NUMBER (ม.1 → 1)
+function extractMoo(name) {
+    const match = name.match(/ม\.?\s*(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+// 4) STRING SIMILARITY (simple scoring)
+function stringSimilarity(a, b) {
+    if (!a || !b) return 0;
+
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+
+    if (a === b) return 1;
+    if (b.includes(a)) return 0.7;
+    if (a.includes(b)) return 0.7;
+
+    // basic similarity
+    let matchCount = 0;
+    for (let ch of a) if (b.includes(ch)) matchCount++;
+
+    return matchCount / Math.max(a.length, b.length);
+}
+
+// 5) SMART LOCATION MATCHING (VERSION B)
+function smartMatchLocation(excelName, dbLocations) {
+    const raw = excelName.trim();
+
+    // clean names for comparison
+    const cleanName = normalizeVillageName(raw);
+    const moo = extractMoo(raw);
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    dbLocations.forEach((loc) => {
+        const dbName = loc.name;
+
+        const hasMoo = moo && dbName.includes(`หมู่${moo}`);
+        const sim = stringSimilarity(cleanName, dbName);
+
+        let score = sim;
+
+        if (hasMoo) score += 0.4;       // bonus for same Moo
+        if (dbName.includes(cleanName)) score += 0.3;
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = loc;
+        }
+    });
+
+    // confidence threshold
+    if (bestScore >= 0.55) return bestMatch;
+
+    return null;
+}
+
+// แปลงชื่อ sheet เช่น "พ.ค.2566", "ก.ค.67", "ธ.ค.", "มีนาคม 2568"
+function parseSheetName(sheetName, index) {
+    const originalName = sheetName;
+    const normalized = String(sheetName).replace(/\s+/g, "").toLowerCase();
+
+    const monthPatterns = [
+        { re: /(มกราคม|ม\.ค\.)/, month: 1 },
+        { re: /(กุมภาพันธ์|ก\.พ\.)/, month: 2 },
+        { re: /(มีนาคม|มี\.ค\.)/, month: 3 },
+        { re: /(เมษายน|เม\.ย\.)/, month: 4 },
+        { re: /(พฤษภาคม|พ\.ค\.)/, month: 5 },
+        { re: /(มิถุนายน|มิ\.ย\.)/, month: 6 },
+        { re: /(กรกฎาคม|ก\.ค\.)/, month: 7 },
+        { re: /(สิงหาคม|ส\.ค\.)/, month: 8 },
+        { re: /(กันยายน|ก\.ย\.)/, month: 9 },
+        { re: /(ตุลาคม|ต\.ค\.)/, month: 10 },
+        { re: /(พฤศจิกายน|พ\.ย\.)/, month: 11 },
+        { re: /(ธันวาคม|ธ\.ค\.)/, month: 12 },
+    ];
+
+    let month = null;
+    for (const m of monthPatterns) {
+        if (m.re.test(normalized)) {
+            month = m.month;
+            break;
+        }
+    }
+
+    if (!month) {
+        console.warn("Cannot detect month from sheet:", originalName);
+        return { sheetName: originalName, index, month: null, year: null, hasYear: false };
+    }
+
+    let year = null;
+    let hasYear = false;
+
+    // พ.ศ. 4 หลัก เช่น 2566
+    const y4 = normalized.match(/25(\d{2})/);
+    if (y4) {
+        const be = 2500 + parseInt(y4[1], 10);
+        year = be - 543; // แปลงเป็น ค.ศ.
+        hasYear = true;
+    } else {
+        // เลข 2 หลักท้าย เช่น 66, 67
+        const y2 = normalized.match(/(\d{2})$/);
+        if (y2) {
+            const be = 2500 + parseInt(y2[1], 10);
+            year = be - 543;
+            hasYear = true;
+        }
+    }
+
+    return { sheetName: originalName, index, month, year, hasYear };
+}
+
+// override manual สำหรับชื่อที่สะกดต่างกัน เช่น "บ้านผาบือ" vs "ผ่าบือ"
+const locationOverrideMap = {
+    // ตัวอย่าง (คุณเพิ่มเองได้เรื่อย ๆ)
+    "บ้านห้วยน้ำขุ่น ม.1": "ห้วยน้ำขุ่น (หมู่1)",
+    "บ้านผาบือ": "ผ่าบือ",
+};
 
 
 // User Verification Middleware
@@ -428,94 +569,117 @@ router.put('/update-profile-collector/:coll_id', verifyUser, upload.single('prof
   });
 });
 
-
-// Get all waste categories
+// GET all categories (for main categorycollector page)
 router.get('/categorycollector', verifyUser, (req, res) => {
     const search = req.query.search || '';
-    const query = `SELECT * FROM waste_categories WHERE name LIKE ? OR description LIKE ?`;
-  
-    const values = [`%${search}%`, `%${search}%`];
-  
-    db.query(query, values, (err, result) => {
-        if (err) {
-            return res.status(500).json({ Error: err.message });
-        }
+
+    const query = `
+        SELECT * FROM waste_categories 
+        WHERE name LIKE ? OR description LIKE ?
+    `;
+
+    db.query(query, [`%${search}%`, `%${search}%`], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
         return res.status(200).json({
             status: "success",
             results: result,
-            coll_id: req.coll_id,
+            coll_id: req.coll_id
         });
     });
-  });;
+});
+// GET: collector waste by type  
+router.get('/wastecollector/type/:type', verifyUser, (req, res) => {
+    const type = req.params.type.toLowerCase();
 
-//get all category
+    const validTypes = [
+        "bathroom", "big", "composable",
+        "dirty", "energyrdf", "hazardous",
+        "recycle"
+    ];
 
-router.get('/dirtywastecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "coll_id is missing from the token" });
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: "Invalid waste type" });
     }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
-  
-  router.get('/sellwastecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
-  
-  router.get('/composablegarbagecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "Coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
-  
-  router.get('/energyrdfwastecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "Coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
-  
-  router.get('/hazardouswastecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "Coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
-  
-  
-  router.get('/bathroomwastecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "Coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
-  
-  
-  router.get('/bigwastecollector', verifyUser, (req, res) => {
-    if (!req.Coll_id) {
-        return res.status(400).json({ error: "Coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, Coll_id: req.Coll_id });
-  });
 
+    db.query(`SELECT * FROM waste_categories WHERE type = ?`, [type], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
 
-//get GarbageTruckSchedule
-router.get('/garbagetruckschedulecollector', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
+        return res.status(200).json({
+            status: "success",
+            results: result,
+            coll_id: req.coll_id
+        });
+    });
 });
 
-router.get('/garbageData', verifyUser, (req, res) => {
-  if (!req.coll_id) {
-      return res.status(400).json({ error: "coll_id is missing from the token" });
-  }
-  return res.status(200).json({ status: "success", name: req.name, coll_id: req.coll_id });
+
+// ตารางรถขยะ (Collector)
+const garbageDataCollector = {
+    Mondaycollector: {
+        dayName: 'วันจันทร์',
+        type: 'ขยะเปื้อน / เปียกน้ำ',
+        themeColor: '#EAB308',
+        icon: 'bi-droplet-fill',
+        heading: 'ประเภทขยะเปื้อนและเปียกน้ำ',
+        description: 'ขยะที่มีการปนเปื้อนสารอินทรีย์ หรือเปียกชื้น ไม่สามารถนำไปรีไซเคิลได้ง่าย',
+        link: '/schedule/mondaycollector'
+    },
+    Tuesdaycollector: {
+        dayName: 'วันอังคาร',
+        type: 'ขยะเชื้อเพลิง / พลังงาน',
+        themeColor: '#DB2777',
+        icon: 'bi-lightning-charge-fill',
+        heading: 'ประเภทขยะเชื้อเพลิง (RDF)',
+        description: 'ขยะแห้งที่ผ่านการคัดแยกแล้ว สามารถนำไปเป็นเชื้อเพลิงทดแทน',
+        link: '/schedule/tuesdaycollector'
+    },
+    Wednesdaycollector: {
+        dayName: 'วันพุธ',
+        type: 'ขยะห้องน้ำ',
+        themeColor: '#16A34A',
+        icon: 'bi-trash-fill',
+        heading: 'ประเภทขยะห้องน้ำ',
+        description: 'ขยะทั่วไปที่เกิดจากการใช้งานสุขอนามัย',
+        link: '/schedule/wednesdaycollector'
+    },
+    Fridaycollector: {
+        dayName: 'วันศุกร์',
+        type: 'ขยะอันตราย',
+        specialTag: 'ระวังอันตราย',
+        themeColor: '#2563EB',
+        icon: 'bi-exclamation-triangle-fill',
+        heading: 'ประเภทขยะอันตราย',
+        description: 'ขยะที่มีสารปนเปื้อนวัตถุอันตราย ห้ามทิ้งรวมกับขยะอื่น',
+        link: '/schedule/fridaycollector'
+    }
+};
+
+// Route ตารางรถขยะทั้งหมด
+router.get('/garbagetruckschedulecollector', (req, res) => {
+    res.status(200).json({
+        status: "success",
+        data: garbageDataCollector
+    });
 });
+
+// Route รายวันแบบถูกต้อง!!
+router.get('/schedule/mondaycollector', (req, res) =>
+    res.json({ status: "success", data: garbageDataCollector.Mondaycollector })
+);
+
+router.get('/schedule/tuesdaycollector', (req, res) =>
+    res.json({ status: "success", data: garbageDataCollector.Tuesdaycollector })
+);
+
+router.get('/schedule/wednesdaycollector', (req, res) =>
+    res.json({ status: "success", data: garbageDataCollector.Wednesdaycollector })
+);
+
+router.get('/schedule/fridaycollector', (req, res) =>
+    res.json({ status: "success", data: garbageDataCollector.Fridaycollector })
+);
+
 
 //get wastepricecollector
 router.get('/wastepricecollector',verifyUser, (req, res) => {
@@ -523,6 +687,164 @@ router.get('/wastepricecollector',verifyUser, (req, res) => {
 })
 
 
+// UPLOAD EXCEL (SMART TIMELINE + SMART LOCATION + วันจันทร์/อ./พ./ศ.)
+router.post("/upload-excel", verifyUser, uploadExcel.single("file"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" }); // ไม่มีไฟล์อัปโหลด
+        }
+
+        const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+
+        // === 1) อ่านข้อมูล META ของชื่อชีต (Parse Sheet Meta: month/year) ===
+        let sheetMetas = workbook.SheetNames.map((name, idx) =>
+            parseSheetName(name, idx)
+        ).filter((m) => m.month !== null);  // เอาเฉพาะชีตที่เจอเดือนจริง
+
+        if (sheetMetas.length === 0) {
+            return res.status(400).json({ error: "Cannot detect any month" }); // หาเดือนไม่เจอ
+        }
+
+        // === เติมปีถ้าชีตไม่ระบุปี โดยใช้ปีของชีตก่อนหน้า (Fill missing years by previous sheet) ===
+        let lastYear = null;
+        for (const meta of sheetMetas) {
+            if (meta.year != null) lastYear = meta.year;
+            else if (lastYear != null) meta.year = lastYear;
+        }
+
+        // === เติมปีจากชีตในอนาคต (Back-fill missing by future context) ===
+        for (let i = 0; i < sheetMetas.length; i++) {
+            const meta = sheetMetas[i];
+            if (meta.year == null) {
+                let future = null;
+                for (let j = i + 1; j < sheetMetas.length; j++) {
+                    if (sheetMetas[j].year != null) {
+                        future = sheetMetas[j];
+                        break;
+                    }
+                }
+                if (future) {
+                    // ถ้าเดือนปัจจุบัน ≤ เดือนที่เจอในอนาคต → ถือเป็นปีเดียวกัน
+                    // ถ้ามากกว่า → แปลว่าข้ามปี (ปีใหม่)
+                    if (meta.month <= future.month) meta.year = future.year;
+                    else meta.year = future.year - 1;
+                }
+            }
+        }
+
+        // === กรองเฉพาะชีตที่มีปีครบ และเรียงลำดับตาม timeline จริง ===
+        sheetMetas = sheetMetas.filter((m) => m.year != null);
+        sheetMetas.sort((a, b) =>
+            a.year === b.year ? a.month - b.month : a.year - b.year
+        );
+
+        // === โหลดรายชื่อ location ทั้งหมดจาก DB (Smart Location Matching) ===
+        const locRows = await query("SELECT id, name FROM locations");
+
+        let totalInserted = 0;
+
+        // === 2) เริ่มประมวลผลทีละชีต (Process each sheet) ===
+        for (const meta of sheetMetas) {
+            const { sheetName, month, year } = meta;
+            const sheet = workbook.Sheets[sheetName];
+            if (!sheet) continue;
+
+            // ลบข้อมูลเดิมของ collector ในเดือนนี้ (Delete old data of this month)
+            await query(
+                `DELETE FROM collectoraddweights
+                 WHERE coll_id = ? AND MONTH(caw_date)=? AND YEAR(caw_date)=?`,
+                [req.coll_id, month, year]
+            );
+
+            // อ่านข้อมูลชีตแบบ Matrix (Raw Matrix) — ใช้แก้ปัญหาคอลัมน์เคลื่อน
+            const range = XLSX.utils.decode_range(sheet["!ref"]);
+            let matrix = [];
+
+            for (let r = range.s.r; r <= range.e.r; r++) {
+                let row = [];
+                for (let c = range.s.c; c <= range.e.c; c++) {
+                    const cellAddr = XLSX.utils.encode_cell({ r, c });
+                    const cell = sheet[cellAddr];
+                    row.push(cell ? cell.v : ""); // ถ้าเซลล์ว่างให้ใส่ ""
+                }
+                matrix.push(row);
+            }
+
+            if (matrix.length < 3) continue;
+
+            // === หาหัวคอลัมน์ที่เป็นวันที่ (Header Row: date of month) ===
+            const headerRow = matrix[1];
+
+            const dayCols = [];
+            for (let c = 0; c < headerRow.length; c++) {
+                const d = parseInt(headerRow[c], 10);
+                if (!isNaN(d) && d > 0 && d <= 31) {
+                    dayCols.push({ col: c, day: d }); // เก็บ index ของคอลัมน์ที่เป็นวันที่จริง
+                }
+            }
+            if (dayCols.length === 0) continue;
+
+            // === Loop ทีละแถวของสถานที่ (Village/Agency rows) ===
+            for (let r = 2; r < matrix.length; r++) {
+                const row = matrix[r];
+                const rawLoc = row[1] ? String(row[1]).trim() : "";
+                if (!rawLoc) continue;
+
+                // Smart location matching (จับคู่ชื่อสถานที่)
+                const matched = smartMatchLocation(rawLoc, locRows);
+                if (!matched) {
+                    console.log("NO LOCATION MATCH:", rawLoc);
+                    continue;
+                }
+                const locationId = matched.id;
+
+                // === Loop ทีละวันที่ (Daily loop per location row) ===
+                for (const dcol of dayCols) {
+                    const weight = parseFloat(row[dcol.col]);
+                    if (!weight || isNaN(weight)) continue; // ข้ามถ้าไม่มีข้อมูลน้ำหนัก
+
+                    const day = dcol.day;
+
+                    // สร้างวันที่แบบไม่เหลื่อมวัน (Fix timezone date shift)
+                    const caw_date = excelDayToDate(day, year, month);
+
+                    // ตรวจสอบวันในสัปดาห์ (Check day of week)
+                    // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, ..., 6 = Sat
+                    const dow = new Date(year, month - 1, day).getDay();
+
+                    let wasteType = null;
+                    if (dow === 1) wasteType = 1;       // จันทร์ → ขยะเปื้อน
+                    else if (dow === 2) wasteType = 3;  // อังคาร → ขยะพลังงาน
+                    else if (dow === 3) wasteType = 2;  // พุธ → ขยะห้องน้ำ
+                    else if (dow === 5) wasteType = 4;  // ศุกร์ → ขยะอันตราย
+                    else continue; // วันอื่นไม่เก็บ
+
+                    // INSERT ข้อมูลลงฐานข้อมูล
+                    await query(
+                        `INSERT INTO collectoraddweights
+                         (caw_date, caw_time, caw_wasteType, caw_subWasteType,
+                          caw_wasteTotal, caw_description, coll_id, caw_location)
+                         VALUES (?, NOW(), ?, NULL, ?, '', ?, ?)`,
+                        [caw_date, wasteType, weight, req.coll_id, locationId]
+                    );
+
+                    totalInserted++;
+                }
+            }
+        }
+
+        // === ส่งผลกลับไป frontend ===
+        return res.status(200).json({
+            status: "success",
+            message: `Upload completed: ${totalInserted} records`, // อัปโหลดสำเร็จทั้งหมดกี่รายการ
+            coll_id: req.coll_id
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Upload failed" }); // อัปโหลดล้มเหลว
+    }
+});
+
 
 module.exports = router;
-
