@@ -1,207 +1,281 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import UnauthorizedMessage from '../../../../components/UnauthorizedMessage';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap-icons/font/bootstrap-icons.css'; // ตรวจสอบว่ามี icon แล้ว
 
-axios.defaults.withCredentials = true;
+// Styles สำหรับธีม Professional Recycle
+const styles = {
+  pageContainer: {
+    backgroundColor: '#F8F9FA',
+    minHeight: '100vh',
+    fontFamily: '"Sarabun", "Prompt", sans-serif',
+  },
+  headerSection: {
+    background: 'linear-gradient(135deg, #0F766E 0%, #115E59 100%)', // สีเขียวอมฟ้า (Teal) ดูเป็นทางการ
+    color: 'white',
+    borderRadius: '0 0 20px 20px',
+    padding: '3rem 0',
+    marginBottom: '2rem',
+    boxShadow: '0 4px 20px rgba(15, 118, 110, 0.2)'
+  },
+  card: {
+    border: 'none',
+    borderRadius: '15px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
+    height: '100%',
+    cursor: 'pointer',
+    backgroundColor: '#fff',
+    overflow: 'hidden'
+  },
+  cardHover: {
+    transform: 'translateY(-8px)',
+    boxShadow: '0 12px 24px rgba(0,0,0,0.12)',
+    borderColor: '#0F766E'
+  },
+  iconWrapper: {
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    backgroundColor: '#F0FDFA',
+    color: '#0F766E',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto 1.5rem auto',
+    fontSize: '2.5rem'
+  },
+  imagePlaceholder: {
+    height: '250px',
+    width: '100%',
+    backgroundColor: '#e9ecef',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#6c757d',
+    fontSize: '1rem',
+    flexDirection: 'column'
+  }
+};
 
-function RecycleWasteVillager() {
-  document.title = "DoiTung Zero-Waste";
+function RecycleWaste() {
+  document.title = "ขยะรีไซเคิลขายได้ - DoiTung Zero-Waste";
 
-  const [auth, setAuth] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [villId, setvillId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categories, setCategories] = useState([
+  const [hoveredId, setHoveredId] = useState(null);
+
+  // ข้อมูลประเภทขยะ (ตามที่คุณให้มา)
+  const categories = [
     {
       id: 'plastic',
       name: 'พลาสติก',
-      image: '/images/plastic.jpg',
-      items: ['ขวดพลาสติก PET ใส',
-        'ขวดพลาสติกขุ่น',
-        'ช้อนไฟเบอร์',
-        'พลาสติกด',
-        'พลาสติกเนื้อไฟเบอร์',
-        'พลาสติกรวม',
-        'ช้อนส้อมพลาสติกอ่อน',
-        'ถุงพลาสติกสะอาด',
-        'ช้อน/พลาสติกกรอบ/ถ้วยกาแฟ',
-        'เสื่อนน้ำมัน',
-        'เชือกพลาสจิกแพ็คกล่อง',
-        'กระสอบฟาง',
-        'ท่อ PVC',
-        'สายไฟฟ้า'],
+      icon: 'bi-box-seam',
+      image: '/images/sellwaste/sellwaste01.png', // แก้ path รูปตามจริง
+      items: [
+        'ขวดพลาสติก PET ใส', 'ขวดพลาสติกขุ่น', 'ช้อนไฟเบอร์', 'พลาสติกดำ',
+        'พลาสติกเนื้อไฟเบอร์', 'พลาสติกรวม', 'ช้อนส้อมพลาสติกอ่อน', 'ถุงพลาสติกสะอาด',
+        'ช้อน/พลาสติกกรอบ/ถ้วยกาแฟ', 'เสื่อน้ำมัน', 'เชือกพลาสติกแพ็คกล่อง',
+        'กระสอบฟาง', 'ท่อ PVC', 'สายไฟฟ้า'
+      ]
     },
     {
       id: 'glass',
       name: 'ขวดแก้ว',
-      image: '/images/glass.jpg',
-      items: ['ขวดใส (ขวดเหล้า, ขวดสปอนเซอร์)',
-        'ขวดสีเขียว (สไปร์ท, เบียร์ช้าง)',
-        'ขวดสีน้ำตาล (เอ็ม 150, เบียร์)',
-        'ขวดแก้วแตก',
-        'ขวดพลาสติก PET ใส',
-        'ขวดรวม'],
+      icon: 'bi-cup-straw',
+      image: '/images/sellwaste/sellwaste02.png',
+      items: [
+        'ขวดใส (ขวดเหล้า, ขวดสปอนเซอร์)', 'ขวดสีเขียว (สไปร์ท, เบียร์ช้าง)',
+        'ขวดสีน้ำตาล (เอ็ม 150, เบียร์)', 'ขวดแก้วแตก',
+        'ขวดพลาสติก PET ใส (ปน)', 'ขวดรวม'
+      ]
     },
     {
       id: 'paper',
       name: 'กระดาษ',
-      image: '/images/paper.jpg',
-      items: [     'กระดาษแข็งสีน้ำตาล (กระดาษลูกฟูก)',
-        'กระดาษย่อย ขาว/ดำ',
-        'กระดาษย่อยรวม (เศษกระดาษ)'],
+      icon: 'bi-journal-text',
+      image: '/images/sellwaste/sellwaste03.jpg',
+      items: [
+        'กระดาษแข็งสีน้ำตาล (กระดาษลูกฟูก)', 'กระดาษย่อย ขาว/ดำ', 'กระดาษย่อยรวม (เศษกระดาษ)'
+      ]
     },
     {
       id: 'metal',
       name: 'โลหะ',
-      image: '/images/metal.jpg',
-      items: [    'กระป๋องอลูมิเนียม',
-        'กระป๋องเหล็ก',
-        'เหล็กย่อย',
-        'เหล็กหนา',
-        'ทองแดง',
-        'ทองเหลือง',
-        'กระป๋องเหล็ก',
-        'สแตนเลส'],
+      icon: 'bi-tools',
+      image: '/images/sellwaste/sellwaste04.png',
+      items: [
+        'กระป๋องอลูมิเนียม', 'กระป๋องเหล็ก', 'เหล็กย่อย', 'เหล็กหนา',
+        'ทองแดง', 'ทองเหลือง', 'สแตนเลส'
+      ]
     },
-  ]);
+  ];
 
   useEffect(() => {
-    const fetchAuthStatus = async () => {
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/v/sellwastevillager`);
-        if (res.data.status?.toLowerCase() === "success") {
-          setAuth(true);
-          if (Array.isArray(res.data.categories)) {
-            setCategories(res.data.categories);
-          }
-          setvillId(res.data.vill_id);
-        } else {
-          setAuth(false);
-          setMessage(res.data.error || "Unauthorized access");
-        }
-      } catch (err) {
-        console.log("Error fetching auth status:", err);
-        setMessage("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAuthStatus();
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/v/sellwastevillager`)
+      .then(res => console.log(res.data))
+      .catch(err => console.log(err));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <h3>Loading...</h3>
-      </div>
-    );
-  }
-
   return (
-    <div className='d-flex flex-column min-vh-100'>
-      {auth ? (
-        <>
-          {/* Header */}
-          <Header type="menu" villId={villId} />
-
-          <div className="flex flex-col min-h-screen bg-gray-100">
-            <div className="max-w-md mx-auto bg-gray-300 rounded-xl overflow-hidden shadow-lg pb-6">
-              <div className="w-full h-6 bg-gray-400 flex justify-center items-center">
-                <div className="w-16 h-1 bg-white rounded-full"></div>
-              </div>
-
-              <div className="p-2">
-                {selectedCategory ? (
-                  <CategoryDetail
-                    category={categories.find(cat => cat.id === selectedCategory)}
-                    onBackClick={() => setSelectedCategory(null)}
-                  />
-                ) : (
-                  <MainScreen
-                    categoryData={categories}
-                    onCategoryClick={setSelectedCategory}
-                  />
-                )}
-              </div>
-
-              <div className="mt-4 flex justify-center">
-                <div className="w-12 h-12 rounded-full bg-white"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <Footer />
-        </>
+    <div className="d-flex flex-column" style={styles.pageContainer}>
+      <Header type="menu" />
+      
+      {selectedCategory ? (
+        <CategoryDetail
+          category={categories.find(cat => cat.id === selectedCategory)}
+          onBackClick={() => setSelectedCategory(null)}
+        />
       ) : (
-        <UnauthorizedMessage message={message} />
+        <MainScreen
+          categoryData={categories}
+          onCategoryClick={setSelectedCategory}
+          hoveredId={hoveredId}
+          setHoveredId={setHoveredId}
+        />
       )}
+
+      <Footer />
     </div>
   );
 }
 
-function MainScreen({ categoryData, onCategoryClick }) {
+// หน้าจอหลัก (Main Menu)
+function MainScreen({ categoryData, onCategoryClick, hoveredId, setHoveredId }) {
   return (
-    <div className="bg-orange-100 rounded-lg overflow-hidden">
-      <div className="bg-yellow-400 text-center py-2 font-bold text-lg">ขยะขายได้</div>
-      <div className="bg-orange-200 p-3 text-sm">
-        <p>ขยะขายได้ คือ ขยะประเภทที่สามารถนำกลับมาแปรรูป และได้รับค่าตอบแทนจากการนำไปขาย</p>
-        <p className="text-red-500 font-semibold mt-2">ท่านสามารถเลือกชนิดขยะได้</p>
-        <p className="text-gray-700">ตามต้องการ ด้านล่างนี้</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 p-4">
-        {categoryData && categoryData.map(category => (
-          <div
-            key={category.id}
-            className="flex flex-col items-center cursor-pointer"
-            onClick={() => onCategoryClick(category.id)}
-          >
-            <div className="rounded-full bg-white p-2 w-32 h-32 flex items-center justify-center">
-              <img src={category.image} alt={category.name} className="w-24 h-24 object-cover rounded-full" />
-            </div>
-            <p className="text-center mt-2">{category.name}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CategoryDetail({ category, onBackClick }) {
-  return (
-    <div className="bg-orange-100 rounded-lg overflow-hidden">
-      <div className="bg-yellow-400 text-center py-2 font-bold text-lg flex items-center">
-        <button
-          onClick={onBackClick}
-          className="bg-blue-500 text-white rounded px-2 py-1 ml-2"
-        >
-          ย้อนกลับ
-        </button>
-        <span className="flex-grow">{category.name}</span>
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold mb-3">ประเภทของ {category.name} ที่รับซื้อ:</h3>
-        <ul className="space-y-2">
-          {(category.items || []).map((item, index) => (
-            <li key={index} className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              {item}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6 bg-yellow-100 p-3 rounded-lg border border-yellow-400">
-          <p className="text-sm">
-            ราคารับซื้อขึ้นอยู่กับปริมาณและคุณภาพของวัสดุรีไซเคิล กรุณาติดต่อเจ้าหน้าที่เพื่อสอบถามราคาปัจจุบัน
-          </p>
+    <div className="flex-grow-1 pb-5">
+      {/* Header Section */}
+      <div style={styles.headerSection} className="text-center">
+        <div className="container">
+            <h1 className="fw-bold display-6 mb-2">
+               <i className="bi bi-currency-exchange me-2"></i>
+               ขยะรีไซเคิลขายได้
+            </h1>
+            <p className="lead opacity-75 mb-0">
+               เปลี่ยนขยะให้เป็นมูลค่า เลือกประเภทวัสดุเพื่อดูรายละเอียดการรับซื้อ
+            </p>
         </div>
       </div>
+
+      <div className="container">
+         {/* Info Alert */}
+         <div className="alert alert-light border shadow-sm rounded-3 mb-5 d-flex align-items-center">
+             <i className="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
+             <div>
+                 <strong>คำแนะนำ:</strong> ขยะขายได้ คือ ขยะที่สามารถนำกลับมาแปรรูปได้ 
+                 กรุณาทำความสะอาดเบื้องต้นและแยกประเภทก่อนนำมาขายเพื่อให้ได้ราคาดีที่สุด
+             </div>
+         </div>
+
+         {/* Categories Grid */}
+         <div className="row g-4 justify-content-center">
+           {categoryData.map(category => (
+             <div className="col-12 col-md-6 col-lg-3" key={category.id}>
+               <div
+                 style={{
+                    ...styles.card,
+                    ...(hoveredId === category.id ? styles.cardHover : {})
+                 }}
+                 onMouseEnter={() => setHoveredId(category.id)}
+                 onMouseLeave={() => setHoveredId(null)}
+                 onClick={() => onCategoryClick(category.id)}
+                 className="p-4 text-center d-flex flex-column align-items-center justify-content-center"
+               >
+                  {/* Icon แทนรูปชั่วคราว หรือจะใช้รูปก็ได้ถ้ามี */}
+                  <div style={styles.iconWrapper}>
+                     <i className={`bi ${category.icon}`}></i>
+                  </div>
+                  
+                  <h4 className="fw-bold text-dark mb-2">{category.name}</h4>
+                  <span className="text-muted small">ดูรายการรับซื้อ <i className="bi bi-arrow-right"></i></span>
+               </div>
+             </div>
+           ))}
+         </div>
+      </div>
     </div>
   );
 }
 
-export default RecycleWasteVillager;
+// หน้าจอรายละเอียด (Detail Screen)
+function CategoryDetail({ category, onBackClick }) {
+  return (
+    <div className="flex-grow-1 py-5 container">
+        <div className="row justify-content-center">
+            <div className="col-12 col-lg-8">
+                <div className="card border-0 shadow-lg overflow-hidden rounded-4">
+                    {/* Image Header */}
+                    <div className="position-relative">
+                        {/* ตรวจสอบว่ามีรูปจริงหรือไม่ ถ้าไม่มีใช้ Placeholder */}
+                        <img 
+                           src={category.image} 
+                           alt={category.name} 
+                           className="w-100"
+                           style={{height: '250px', objectFit: 'cover'}}
+                           onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                           }}
+                        />
+                        <div style={{...styles.imagePlaceholder, display: 'none'}}>
+                            <i className={`bi ${category.icon} display-1 mb-3 opacity-50`}></i>
+                            <span>{category.name} Image</span>
+                        </div>
+                        
+                        {/* Overlay Title */}
+                        <div className="position-absolute bottom-0 start-0 w-100 p-4" style={{background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)'}}>
+                             <h2 className="text-white fw-bold m-0">{category.name}</h2>
+                        </div>
+                        
+                        {/* Back Button Floating */}
+                        <button 
+                            onClick={onBackClick}
+                            className="btn btn-light rounded-circle shadow position-absolute top-0 start-0 m-3"
+                            style={{width: '40px', height: '40px', padding: 0}}
+                        >
+                            <i className="bi bi-arrow-left text-dark"></i>
+                        </button>
+                    </div>
+
+                    <div className="card-body p-5">
+                        <div className="d-flex align-items-center mb-4 pb-3 border-bottom">
+                            <i className="bi bi-list-check fs-3 text-success me-3"></i>
+                            <h4 className="fw-bold m-0">ประเภทของ {category.name} ที่รับซื้อ</h4>
+                        </div>
+
+                        {/* List Items */}
+                        <div className="row g-3">
+                             {category.items.map((item, index) => (
+                                 <div className="col-12 col-md-6" key={index}>
+                                     <div className="d-flex align-items-start">
+                                         <i className="bi bi-check-circle-fill text-success me-2 mt-1"></i>
+                                         <span className="text-dark">{item}</span>
+                                     </div>
+                                 </div>
+                             ))}
+                        </div>
+
+                        {/* Pricing Notice */}
+                        <div className="mt-5 p-4 bg-warning bg-opacity-10 rounded-3 border border-warning">
+                            <div className="d-flex">
+                                <i className="bi bi-exclamation-circle-fill text-warning fs-4 me-3"></i>
+                                <div>
+                                    <h6 className="fw-bold text-dark">หมายเหตุเรื่องราคา</h6>
+                                    <p className="text-muted small mb-0">
+                                        ราคารับซื้ออาจมีการเปลี่ยนแปลงตามกลไกตลาด และขึ้นอยู่กับความสะอาดของวัสดุ 
+                                        กรุณาติดต่อจุดรับซื้อเพื่อสอบถามราคาปัจจุบัน
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  );
+}
+
+export default RecycleWaste;

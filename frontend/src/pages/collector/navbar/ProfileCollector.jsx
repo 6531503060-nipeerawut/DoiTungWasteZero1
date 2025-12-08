@@ -1,40 +1,90 @@
+// ProfileCollector.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import UnauthorizedMessage from '../../../components/UnauthorizedMessage';
 
+// ✅ Import useNavigate เข้ามา (เผื่อใช้ในอนาคต)
+import { useParams, useNavigate } from 'react-router-dom'; 
+
+// MUI Components
+import {
+    Container, Paper, Typography, Box, Button, Avatar, Divider,
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+    CircularProgress, List, ListItem, ListItemIcon, ListItemText,
+    IconButton, useMediaQuery, useTheme, Chip 
+} from '@mui/material';
+
+import {
+    Edit as EditIcon,
+    Person as PersonIcon,
+    Phone as PhoneIcon,
+    Badge as BadgeIcon,
+    CameraAlt as CameraIcon,
+    Save as SaveIcon,
+    Close as CloseIcon
+} from '@mui/icons-material';
+
 axios.defaults.withCredentials = true;
 
+// --- Theme Constants ---
+const themeColors = {
+    primary: '#2E5D4B',    // เขียวแม่ฟ้าหลวง
+    secondary: '#8D6E63',  // น้ำตาลดิน
+    accent: '#D4AF37',     // ทอง
+    bg: '#F7F9F6',         // พื้นหลัง
+    textHeader: '#1A3C34'  // เขียวเข้มหัวข้อ
+};
+
 const ProfileCollector = () => {
-    document.title = "DoiTung Zero-Waste";
+    document.title = "ข้อมูลส่วนตัว (เจ้าหน้าที่) - DoiTung Zero-Waste";
+    
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    
+    // ✅ ใส่ Comment ปิดการแจ้งเตือน (เก็บไว้เผื่อใช้ในอนาคต)
+    // eslint-disable-next-line no-unused-vars
+    const navigate = useNavigate();
+
+    // ✅ ดึง ID จาก URL
+    const { id } = useParams(); 
+
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
-    const [collId, setCollId] = useState(null);
 
     const [profile, setProfile] = useState(null);
-    const [showModal, setShowModal] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
     const [formData, setFormData] = useState({
         fullName: '',
         descriptionRole: '',
         phone: '',
-        profileImage: null
+        profileImage: null,
+        role: ''
     });
+    const [previewImage, setPreviewImage] = useState(null);
 
     useEffect(() => {
         const fetchAuthStatus = async () => {
+            // ป้องกันกรณี id เป็น null หรือ undefined
+            if (!id) {
+                setLoading(false);
+                setMessage("ไม่พบรหัสผู้ใช้งาน");
+                return;
+            }
+
             try {
-                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/profile-collector/${collId}`, { withCredentials: true })
+                // ใช้ id จาก URL ยิงไปที่ API โดยตรง
+                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/c/profile-collector/${id}`, { withCredentials: true });
+                
                 if (res.data.status?.toLowerCase() === "success"){
                     setAuth(true);
-                    console.log("Profile Data:", res.data.data);
                     setProfile(res.data.data);
-                    setCollId(res.data.coll_id);
+                    
                     setFormData({
                         fullName: res.data.data.coll_fullName,
+                        descriptionRole: res.data.data.coll_descriptionRole,
                         phone: res.data.data.phone,
                         profileImage: null,
                         role: res.data.data.role_name
@@ -51,21 +101,19 @@ const ProfileCollector = () => {
             }
         };
         fetchAuthStatus();
-    }, [collId]);
+    }, [id]); 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
+        setFormData({ ...formData, [name]: value });
     };
 
     const handleFileChange = (e) => {
-        setFormData({
-            ...formData,
-            profileImage: e.target.files[0]
-        });
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setFormData({ ...formData, profileImage: file });
+            setPreviewImage(URL.createObjectURL(file));
+        }
     };
 
     const handleSubmit = (e) => {
@@ -80,133 +128,260 @@ const ProfileCollector = () => {
             'ตัวแทนหน่วยงานราชการ': 2,
             'ตัวแทนหมู่บ้าน': 3
         };
-        const roleId = roleMap[profile.role_name] || null;
+        const roleId = roleMap[profile.role_name] || 1; 
         updatedData.append('role', roleId);
 
         if (formData.profileImage) {
             updatedData.append('profileImage', formData.profileImage);
         }
 
-        axios.put(`${process.env.REACT_APP_BACKEND_URL}/c/update-profile-collector/${collId}`, updatedData, { withCredentials: true })
-        .then(res => {
-            console.log('Profile updated successfully');
-            setShowModal(false);
-            setProfile({
-                ...profile,
-                coll_fullName: formData.fullName,
-                phone: formData.phone,
-                coll_profileImage: formData.profileImage ? formData.profileImage.name : profile.coll_profileImage
+        axios.put(`${process.env.REACT_APP_BACKEND_URL}/c/update-profile-collector/${id}`, updatedData, { withCredentials: true })
+            .then(res => {
+                setOpenDialog(false);
+                window.location.reload();
+            })
+            .catch(err => {
+                console.error('Error updating profile:', err);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             });
-        })
-        .catch(err => {
-            console.error('Error updating profile:', err.response ? err.response.data : err.message);
-        });
     };
 
     if (loading) {
         return (
-            <div className="d-flex justify-content-center align-items-center min-vh-100">
-                <h3>Loading...</h3>
-            </div>
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor={themeColors.bg}>
+                <CircularProgress sx={{ color: themeColors.primary }} />
+            </Box>
         );
     }
 
     return (
-        <div className="d-flex flex-column min-vh-100 bg-light">
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: themeColors.bg, fontFamily: 'Sarabun, sans-serif' }}>
             {auth ? (
                 <>
-                    {/* Header */}
-                    <Header type="menu" collId={collId} />
+                    <Header collId={id} />
 
-                    {/* Body */}
-                    <div className="flex-grow-1 d-flex justify-content-center align-items-center">
-                    <div className="card shadow-sm border-0 p-4 bg-white rounded" style={{ maxWidth: '600px', width: '100%' }}>
-                        <h1 className="text-center fw-bold mb-4">บัญชีผู้ใช้</h1>
-                        <div className="text-center mb-4">
-                                <img
-                                    src={`${process.env.REACT_APP_BACKEND_URL}/images/` + profile.coll_profileImage}
-                                    alt="Profile"
-                                    className="img-fluid mb-3 mx-auto d-block"
-                                    style={{width: '150px',
-                                        height: '150px',
-                                        objectFit: 'cover',
-                                        borderRadius: '50%',
-                                        border: '2px solid #ccc'
+                    <Container maxWidth="sm" sx={{ mt: 4, mb: 10, flexGrow: 1 }}>
+                        <Paper elevation={2} sx={{ borderRadius: 4, overflow: 'hidden', position: 'relative', bgcolor: 'white' }}>
+                            
+                            {/* Header Background Decor */}
+                            <Box sx={{ 
+                                height: '140px', 
+                                background: `linear-gradient(135deg, #43A047 0%, ${themeColors.primary} 100%)`,
+                                position: 'relative'
+                            }}>
+                                <Box sx={{
+                                    position: 'absolute',
+                                    bottom: -20,
+                                    left: 0,
+                                    right: 0,
+                                    height: '40px',
+                                    bgcolor: 'white',
+                                }} />
+                            </Box>
+
+                            {/* Profile Image */}
+                            <Box display="flex" flexDirection="column" alignItems="center" mt="-70px" position="relative" px={3}>
+                                <Avatar
+                                    src={profile?.coll_profileImage ? `${process.env.REACT_APP_BACKEND_URL}/images/${profile.coll_profileImage}` : "/default-avatar.png"}
+                                    alt={profile?.coll_fullName}
+                                    sx={{ 
+                                        width: 140, 
+                                        height: 140, 
+                                        border: '5px solid white', 
+                                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                                        bgcolor: '#E0E0E0'
                                     }}
                                 />
-                                <p><strong>ชื่อ - นามสกุล:</strong> {profile.coll_fullName}</p>
-                                <p><strong>สถานะบัญชีผู้ใช้:</strong> {profile.role_name}</p>
-                                <p><strong>เบอร์โทรศัพท์:</strong> {`0${profile.phone}`}</p>
-                                <button onClick={() => setShowModal(true)} className="btn btn-primary">แก้ไขข้อมูล</button>
-                            </div>
-                        </div>
+                                
+                                <Typography variant="h5" fontWeight="bold" mt={2} color={themeColors.textHeader} sx={{ fontFamily: 'Sarabun' }}>
+                                    {profile?.coll_fullName}
+                                </Typography>
+                                
+                                <Chip 
+                                    label={profile?.role_name || 'เจ้าหน้าที่'} 
+                                    sx={{ 
+                                        mt: 1, 
+                                        bgcolor: '#E8F5E9', 
+                                        color: themeColors.primary, 
+                                        fontWeight: 'bold',
+                                        fontFamily: 'Sarabun'
+                                    }} 
+                                />
+                            </Box>
 
-                        {/* Modal for editing profile */}
-                        {showModal && (
-                            <div className="modal show" style={{ display: 'block' }} onClick={() => setShowModal(false)}>
-                                <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-                                    <div className="modal-content">
-                                        <div className="modal-header">
-                                            <h5 className="modal-title">แก้ไขข้อมูล</h5>
-                                            <button type="button" className="close" onClick={() => setShowModal(false)}>&times;</button>
-                                        </div>
-                                        <div className="modal-body">
-                                            <form onSubmit={handleSubmit}>
-                                                <div className="form-group">
-                                                <div className="form-group">
-                                                    <label>รูปโปรไฟล์</label>
-                                                    <input
-                                                        type="file"
-                                                        className="form-control"
-                                                        onChange={handleFileChange}
-                                                    />
-                                                </div>
-                                                    <label>ชื่อ - นามสกุล</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        name="fullName"
-                                                        value={formData.fullName}
-                                                        onChange={handleChange}
-                                                        placeholder="Enter full name"
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>สถานะบัญชีผู้ใช้</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={formData.role}
-                                                        readOnly
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>เบอร์โทรศัพท์</label>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        name="phone"
-                                                        value={`0${String(formData.phone).replace(/^0/, '')}`}
-                                                        onChange={(e) =>
-                                                            setFormData({
-                                                                ...formData,
-                                                                phone: e.target.value.replace(/^0/, '')
-                                                            })
-                                                        }
-                                                        placeholder="Enter phone number"
-                                                    />
-                                                </div>
-                                                <button type="submit" className="btn btn-success">บันทึกข้อมูล</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    
-                
-                    {/* Footer */}
+                            <Divider sx={{ my: 3, mx: 3 }} />
+
+                            {/* Info List */}
+                            <List sx={{ px: 2 }}>
+                                <ListItem>
+                                    <ListItemIcon>
+                                        <Avatar sx={{ bgcolor: '#FFF8E1', color: themeColors.accent }}>
+                                            <PersonIcon />
+                                        </Avatar>
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                        primary="ชื่อ-นามสกุล" 
+                                        secondary={profile?.coll_fullName} 
+                                        primaryTypographyProps={{ variant: 'caption', color: 'text.secondary', fontFamily: 'Sarabun' }}
+                                        secondaryTypographyProps={{ variant: 'body1', color: 'text.primary', fontWeight: 'medium', fontFamily: 'Sarabun' }}
+                                    />
+                                </ListItem>
+                                <ListItem>
+                                    <ListItemIcon>
+                                        <Avatar sx={{ bgcolor: '#E3F2FD', color: '#1976D2' }}>
+                                            <BadgeIcon />
+                                        </Avatar>
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                        primary="สถานะ" 
+                                        secondary={profile?.role_name} 
+                                        primaryTypographyProps={{ variant: 'caption', color: 'text.secondary', fontFamily: 'Sarabun' }}
+                                        secondaryTypographyProps={{ variant: 'body1', color: 'text.primary', fontWeight: 'medium', fontFamily: 'Sarabun' }}
+                                    />
+                                </ListItem>
+                                <ListItem>
+                                    <ListItemIcon>
+                                        <Avatar sx={{ bgcolor: '#E8F5E9', color: themeColors.primary }}>
+                                            <PhoneIcon />
+                                        </Avatar>
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                        primary="เบอร์โทรศัพท์" 
+                                        secondary={profile?.phone ? `0${profile.phone}` : '-'} 
+                                        primaryTypographyProps={{ variant: 'caption', color: 'text.secondary', fontFamily: 'Sarabun' }}
+                                        secondaryTypographyProps={{ variant: 'body1', color: 'text.primary', fontWeight: 'medium', fontFamily: 'Sarabun' }}
+                                    />
+                                </ListItem>
+                            </List>
+
+                            <Box p={3} mt={2} textAlign="center">
+                                <Button 
+                                    variant="contained" 
+                                    fullWidth
+                                    startIcon={<EditIcon />} 
+                                    onClick={() => setOpenDialog(true)}
+                                    sx={{ 
+                                        borderRadius: 3, 
+                                        py: 1.5,
+                                        textTransform: 'none',
+                                        bgcolor: themeColors.primary,
+                                        fontFamily: 'Sarabun',
+                                        fontWeight: 'bold',
+                                        boxShadow: '0 4px 12px rgba(46, 93, 75, 0.3)',
+                                        '&:hover': { bgcolor: '#1A3C34' }
+                                    }}
+                                >
+                                    แก้ไขข้อมูลส่วนตัว
+                                </Button>
+                            </Box>
+
+                        </Paper>
+                    </Container>
+
+                    {/* --- Edit Profile Dialog --- */}
+                    <Dialog 
+                        open={openDialog} 
+                        onClose={() => setOpenDialog(false)} 
+                        fullWidth 
+                        fullScreen={isMobile}
+                        maxWidth="xs"
+                        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 3 } }}
+                    >
+                        <DialogTitle sx={{ 
+                            borderBottom: '1px solid #eee', 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            bgcolor: isMobile ? themeColors.primary : 'white',
+                            color: isMobile ? 'white' : 'inherit'
+                        }}>
+                            <Typography variant="h6" fontWeight="bold" fontFamily="Sarabun">แก้ไขข้อมูล</Typography>
+                            <IconButton onClick={() => setOpenDialog(false)} sx={{ color: 'inherit' }}>
+                                <CloseIcon />
+                            </IconButton>
+                        </DialogTitle>
+                        
+                        <DialogContent sx={{ pt: 3, bgcolor: '#FAFAFA' }}>
+                            <Box display="flex" flexDirection="column" gap={2} mt={1}>
+                                
+                                {/* Image Upload with Preview */}
+                                <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+                                    <Avatar 
+                                        src={previewImage || (profile?.coll_profileImage ? `${process.env.REACT_APP_BACKEND_URL}/images/${profile.coll_profileImage}` : "/default-avatar.png")}
+                                        sx={{ width: 100, height: 100, mb: 2, border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                                    />
+                                    <input
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        id="upload-profile-pic"
+                                        type="file"
+                                        onChange={handleFileChange}
+                                    />
+                                    <label htmlFor="upload-profile-pic">
+                                        <Button variant="outlined" component="span" startIcon={<CameraIcon />} size="small" sx={{ fontFamily: 'Sarabun', borderRadius: 20, borderColor: themeColors.primary, color: themeColors.primary }}>
+                                            เปลี่ยนรูปโปรไฟล์
+                                        </Button>
+                                    </label>
+                                    {formData.profileImage && (
+                                        <Typography variant="caption" mt={1} color="text.secondary">
+                                            ไฟล์ที่เลือก: {formData.profileImage.name}
+                                        </Typography>
+                                    )}
+                                </Box>
+
+                                <TextField
+                                    label="ชื่อ - นามสกุล"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    variant="outlined"
+                                    sx={{ bgcolor: 'white', fontFamily: 'Sarabun' }}
+                                />
+
+                                <TextField
+                                    label="สถานะ (แก้ไขไม่ได้)"
+                                    value={formData.role}
+                                    fullWidth
+                                    variant="filled"
+                                    InputProps={{ readOnly: true }}
+                                    sx={{ fontFamily: 'Sarabun' }}
+                                />
+
+                                <TextField
+                                    label="เบอร์โทรศัพท์"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    variant="outlined"
+                                    type="tel"
+                                    helperText="กรอกเฉพาะตัวเลข 10 หลัก"
+                                    sx={{ bgcolor: 'white', fontFamily: 'Sarabun' }}
+                                />
+                            </Box>
+                        </DialogContent>
+                        
+                        <DialogActions sx={{ p: 2, borderTop: '1px solid #eee', bgcolor: 'white' }}>
+                            <Button onClick={() => setOpenDialog(false)} color="inherit" sx={{ fontFamily: 'Sarabun' }}>
+                                ยกเลิก
+                            </Button>
+                            <Button 
+                                onClick={handleSubmit} 
+                                variant="contained" 
+                                startIcon={<SaveIcon />}
+                                sx={{ 
+                                    bgcolor: themeColors.accent, 
+                                    fontFamily: 'Sarabun', 
+                                    fontWeight: 'bold',
+                                    '&:hover': { bgcolor: '#BFA130' }
+                                }}
+                            >
+                                บันทึก
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
                     <Footer />
                 </>
             ) : (

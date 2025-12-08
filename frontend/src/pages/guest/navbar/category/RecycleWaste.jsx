@@ -1,158 +1,271 @@
+// RecycleWaste.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+// MUI Components
+import { 
+    Container, Grid, Card, CardActionArea, CardContent, CardMedia, 
+    Typography, Box, CircularProgress, Chip, Divider, Button
+} from '@mui/material';
+
+// MUI Icons
+import { 
+    ArrowBack as ArrowBackIcon,
+    ArrowForward as ArrowForwardIcon, 
+    Recycling as RecyclingIcon,
+    MonetizationOn as MoneyIcon 
+} from '@mui/icons-material';
+
+// --- Theme Constants ---
+const themeColors = {
+    primary: '#2E5D4B',    // เขียวแม่ฟ้าหลวง
+    recycle: '#43A047',    // เขียวรีไซเคิล
+    accent: '#D4AF37',     // ทอง
+    textHeader: '#1A3C34'
+};
+
+// ข้อมูลจำลอง (Mock Data)
+const defaultWastes = [
+    { id: 'glass', name: 'ขวดแก้ว', description: 'ขวดแก้วใส/สีน้ำตาล/สีเขียวและเศษแก้ว', image: '/images/sellwaste/sellwaste02.png', link: '/sellwaste/glass' },
+    { id: 'paper', name: 'กระดาษ', description: 'กระดาษลัง, กระดาษขาว-ดำ, กระดาษย่อย', image: '/images/sellwaste/sellwaste03.png', link: '/sellwaste/paper' },
+    { id: 'plastic', name: 'พลาสติก', description: 'ขวด PET, ขวดขุ่น, พลาสติกกรอบ, ท่อ PVC', image: '/images/sellwaste/sellwaste01.png', link: '/sellwaste/plastic' },
+    { id: 'metal', name: 'โลหะ', description: 'กระป๋องอลูมิเนียม, เหล็ก, ทองแดง, สแตนเลส', image: '/images/sellwaste/sellwaste04.png', link: '/sellwaste/metal' },
+];
 
 function RecycleWaste() {
-  document.title = "DoiTung Zero-Waste";
+    document.title = "ขยะรีไซเคิล - DoiTung Zero-Waste";
 
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categories,] = useState([
-    {
-      id: 'plastic',
-      name: 'พลาสติก',
-      image: '/images/plastic.jpg',
-      items: ['ขวดพลาสติก PET ใส',
-        'ขวดพลาสติกขุ่น',
-        'ช้อนไฟเบอร์',
-        'พลาสติกด',
-        'พลาสติกเนื้อไฟเบอร์',
-        'พลาสติกรวม',
-        'ช้อนส้อมพลาสติกอ่อน',
-        'ถุงพลาสติกสะอาด',
-        'ช้อน/พลาสติกกรอบ/ถ้วยกาแฟ',
-        'เสื่อนน้ำมัน',
-        'เชือกพลาสจิกแพ็คกล่อง',
-        'กระสอบฟาง',
-        'ท่อ PVC',
-        'สายไฟฟ้า'],
-    },
-    {
-      id: 'glass',
-      name: 'ขวดแก้ว',
-      image: '/images/glass.jpg',
-      items: ['ขวดใส (ขวดเหล้า, ขวดสปอนเซอร์)',
-        'ขวดสีเขียว (สไปร์ท, เบียร์ช้าง)',
-        'ขวดสีน้ำตาล (เอ็ม 150, เบียร์)',
-        'ขวดแก้วแตก',
-        'ขวดพลาสติก PET ใส',
-        'ขวดรวม'],
-    },
-    {
-      id: 'paper',
-      name: 'กระดาษ',
-      image: '/images/paper.jpg',
-      items: ['กระดาษแข็งสีน้ำตาล (กระดาษลูกฟูก)',
-        'กระดาษย่อย ขาว/ดำ',
-        'กระดาษย่อยรวม (เศษกระดาษ)'],
-    },
-    {
-      id: 'metal',
-      name: 'โลหะ',
-      image: '/images/metal.jpg',
-      items: ['กระป๋องอลูมิเนียม',
-        'กระป๋องเหล็ก',
-        'เหล็กย่อย',
-        'เหล็กหนา',
-        'ทองแดง',
-        'ทองเหลือง',
-        'กระป๋องเหล็ก',
-        'สแตนเลส'],
-    },
-  ]);
+    const [wastes, setWastes] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    axios.get(`${process.env.REACT_APP_BACKEND_URL}/sellwaste`)
-      .then(res => console.log(res.data))
-      .catch(err => console.log(err));
-  }, []);
+    useEffect(() => {
+        const fetchRecycleWaste = async () => {
+            setLoading(true);
+            try {
+                const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/sellwaste`);
+                if (res.data.status?.toLowerCase() === 'success') {
+                    setWastes(res.data.results);
+                } else {
+                    setWastes(defaultWastes);
+                }
+            } catch (err) {
+                console.error("Error fetching recycle waste:", err);
+                setWastes(defaultWastes);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRecycleWaste();
+    }, []);
 
-  return (
-    <div className="d-flex flex-column min-vh-100">
-    {/* Header */}
-    <Header type="menu" />
-  
-    {/* Main content */}
-    <div className="flex-grow-1 d-flex flex-column align-items-center justify-content-start">
-    {selectedCategory ? (
-        <CategoryDetail
-          category={categories.find(cat => cat.id === selectedCategory)}
-          onBackClick={() => setSelectedCategory(null)}
-        />
-      ) : (
-        <MainScreen
-          categoryData={categories}
-          onCategoryClick={setSelectedCategory}
-        />
-      )}
-    </div>
-  
-    {/* Footer */}
-    <Footer />
-  </div>
-  
-  );
-}
+    return (
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            minHeight: '100vh', 
+            background: `linear-gradient(180deg, ${themeColors.primary} 0%, ${themeColors.recycle} 100%)`, 
+            fontFamily: 'Sarabun, sans-serif',
+            position: 'relative',
+            overflowX: 'hidden' 
+        }}>
+            
+            {/* Decorative Background Circles */}
+            <Box sx={{ position: 'absolute', top: -100, left: -100, width: 400, height: 400, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+            <Box sx={{ position: 'absolute', top: '20%', right: -50, width: 300, height: 300, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+            <Box sx={{ position: 'absolute', bottom: 0, left: '10%', width: 500, height: 500, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
 
-function MainScreen({ categoryData, onCategoryClick }) {
-  return (
-    <div className="bg-orange-100 rounded-lg overflow-hidden">
-      <div className="bg-yellow-400 text-center py-2 font-bold text-lg">ขยะขายได้</div>
-      <div className="bg-orange-200 p-3 text-sm">
-        <p>ขยะขายได้ คือ ขยะประเภทที่สามารถนำกลับมาแปรรูป และได้รับค่าตอบแทนจากการนำไปขาย</p>
-        <p className="text-red-500 font-semibold mt-2">ท่านสามารถเลือกชนิดขยะได้</p>
-        <p className="text-gray-700">ตามต้องการ ด้านล่างนี้</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 p-4">
-        {categoryData && categoryData.map(category => (
-          <div
-            key={category.id}
-            className="flex flex-col items-center cursor-pointer"
-            onClick={() => onCategoryClick(category.id)}
-          >
-            <div className="rounded-full bg-white p-2 w-32 h-32 flex items-center justify-center">
-              <img src={category.image} alt={category.name} className="w-24 h-24 object-cover rounded-full" />
-            </div>
-            <p className="text-center mt-2">{category.name}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+            <Header type="menu" />
 
-function CategoryDetail({ category, onBackClick }) {
-  return (
-    <div className="bg-orange-100 rounded-lg overflow-hidden">
-      <div className="bg-yellow-400 text-center py-2 font-bold text-lg flex items-center">
-        <button
-          onClick={onBackClick}
-          className="bg-blue-500 text-white rounded px-2 py-1 ml-2"
-        >
-          ย้อนกลับ
-        </button>
-        <span className="flex-grow">{category.name}</span>
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold mb-3">ประเภทของ {category.name} ที่รับซื้อ:</h3>
-        <ul className="space-y-2">
-          {(category.items || []).map((item, index) => (
-            <li key={index} className="flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              {item}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6 bg-yellow-100 p-3 rounded-lg border border-yellow-400">
-          <p className="text-sm">
-            ราคารับซื้อขึ้นอยู่กับปริมาณและคุณภาพของวัสดุรีไซเคิล กรุณาติดต่อเจ้าหน้าที่เพื่อสอบถามราคาปัจจุบัน
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+            {/* ✅ ย้ายปุ่มมาไว้นอก Container หลัก เพื่อให้อยู่ชิดขอบจอซ้ายสุด */}
+            <Box sx={{ 
+                width: '100%', 
+                px: { xs: 2, md: 4 }, // เว้นระยะจากขอบจอนิดหน่อย
+                mt: { xs: 3, md: 9 }, // เว้นระยะจาก Header
+                position: 'relative', 
+                zIndex: 10 
+            }}>
+                <Button 
+                    component={Link} 
+                    to="/category" 
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ 
+                        color: 'white',
+                        fontFamily: 'Sarabun',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        px: 3,
+                        py: 1,
+                        borderRadius: 30,
+                        bgcolor: 'rgba(255,255,255,0.15)', 
+                        backdropFilter: 'blur(5px)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        transition: 'all 0.3s ease',
+                        fontSize: { xs: '0.9rem', md: '1rem' },
+                        '&:hover': { 
+                            bgcolor: 'rgba(255,255,255,0.3)',
+                            border: '1px solid white',
+                            transform: 'translateX(-5px)'
+                        }
+                    }}
+                >
+                    กลับสู่หน้าหมวดหมู่
+                </Button>
+            </Box>
+
+            {/* Content Container */}
+            <Container maxWidth="lg" sx={{ flexGrow: 1, pb: 8, position: 'relative', zIndex: 1 }}>
+                
+                {/* Title Section */}
+                <Box textAlign="center" color="white" mb={6} mt={{ xs: 2, md: 0 }}>
+                    <Box 
+                        display="flex" 
+                        alignItems="center" 
+                        justifyContent="center" 
+                        mb={1}
+                        sx={{ 
+                            flexDirection: 'row', 
+                            gap: 2 
+                        }}
+                    >
+                        {/* ไอคอนรีไซเคิล */}
+                        <RecyclingIcon 
+                            sx={{ 
+                                fontSize: { xs: 40, md: 56 }, 
+                                color: '#FFD700', 
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                            }} 
+                        />
+                        
+                        {/* ข้อความหัวข้อ */}
+                        <Typography 
+                            variant="h3" 
+                            fontWeight="bold" 
+                            sx={{ 
+                                fontFamily: 'Sarabun', 
+                                textShadow: '0 4px 10px rgba(0,0,0,0.5)', 
+                                fontSize: { xs: '2rem', md: '3rem' },
+                                lineHeight: 1.2
+                            }}
+                        >
+                            ขยะรีไซเคิล
+                        </Typography>
+
+                        {/* ไอคอนเงิน */}
+                        <MoneyIcon 
+                            sx={{ 
+                                fontSize: { xs: 40, md: 56 }, 
+                                color: '#FFD700',
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                            }} 
+                        />
+                    </Box>
+
+                    <Typography variant="h6" sx={{ mt: 1, opacity: 0.95, fontWeight: 300, fontFamily: 'Sarabun', maxWidth: '800px', mx: 'auto', textShadow: '0 2px 4px rgba(0,0,0,0.5)', fontSize: { xs: '1rem', md: '1.25rem' } }}>
+                        ตรวจสอบราคารับซื้อวัสดุรีไซเคิลประจำวัน แยกขยะให้ถูกวิธี สร้างรายได้ สร้างสิ่งแวดล้อมที่ดี
+                    </Typography>
+                </Box>
+
+                {/* Grid Cards */}
+                {loading ? (
+                    <Box display="flex" justifyContent="center" py={10}>
+                        <CircularProgress sx={{ color: 'white' }} size={60} thickness={4} />
+                    </Box>
+                ) : (
+                    <Grid container spacing={3}>
+                        {wastes.length > 0 ? wastes.map((waste) => (
+                            <Grid item xs={12} sm={6} md={3} key={waste.id || waste.waste_id}>
+                                <Card 
+                                    elevation={6}
+                                    sx={{
+                                        borderRadius: 4, 
+                                        height: '100%', 
+                                        display: 'flex', 
+                                        flexDirection: 'column',
+                                        transition: 'all 0.3s ease',
+                                        bgcolor: 'rgba(255, 255, 255, 0.95)', 
+                                        backdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255,255,255,0.5)',
+                                        '&:hover': { 
+                                            transform: 'translateY(-10px)', 
+                                            boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                                            bgcolor: 'white',
+                                            borderColor: themeColors.recycle
+                                        }
+                                    }}
+                                >
+                                    <CardActionArea 
+                                        component={Link} 
+                                        to={waste.link || `/sellwaste/${waste.waste_id}`} 
+                                        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+                                    >
+                                        <Box sx={{ height: 200, overflow: 'hidden', position: 'relative' }}>
+                                            <CardMedia
+                                                component="img"
+                                                height="200"
+                                                image={waste.image || '/images/default.jpg'}
+                                                alt={waste.name}
+                                                sx={{ 
+                                                    objectFit: 'cover', 
+                                                    transition: 'transform 0.5s', 
+                                                    '.MuiCardActionArea-root:hover &': { transform: 'scale(1.1)' } 
+                                                }}
+                                                onError={(e) => { e.target.src = 'https://via.placeholder.com/300?text=No+Image'; }}
+                                            />
+                                            <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
+                                                <Chip 
+                                                    label="รับซื้อ" 
+                                                    size="small" 
+                                                    sx={{ 
+                                                        bgcolor: themeColors.accent, 
+                                                        color: themeColors.textHeader, 
+                                                        fontWeight: 'bold', 
+                                                        fontFamily: 'Sarabun',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                                                    }} 
+                                                />
+                                            </Box>
+                                        </Box>
+
+                                        <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                                            <Typography gutterBottom variant="h5" fontWeight="bold" color={themeColors.textHeader} sx={{ fontFamily: 'Sarabun' }}>
+                                                {waste.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontFamily: 'Sarabun', minHeight: '40px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                {waste.description}
+                                            </Typography>
+                                            
+                                            <Divider sx={{ my: 2 }} />
+                                            
+                                            <Box display="flex" justifyContent="flex-end" alignItems="center">
+                                                <Typography variant="button" sx={{ fontWeight: 'bold', color: themeColors.primary, display: 'flex', alignItems: 'center', fontFamily: 'Sarabun' }}>
+                                                    ดูราคา <ArrowForwardIcon sx={{ ml: 1, fontSize: 18 }} />
+                                                </Typography>
+                                            </Box>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
+                            </Grid>
+                        )) : (
+                            <Grid item xs={12}>
+                                <Box textAlign="center" py={8} color="rgba(255,255,255,0.8)">
+                                    <RecyclingIcon sx={{ fontSize: 80, opacity: 0.6, mb: 2 }} />
+                                    <Typography variant="h5" gutterBottom fontFamily="Sarabun" color="white" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                        ไม่พบข้อมูลขยะรีไซเคิล
+                                    </Typography>
+                                    <Typography variant="body1" fontFamily="Sarabun">กรุณาลองใหม่อีกครั้งในภายหลัง</Typography>
+                                </Box>
+                            </Grid>
+                        )}
+                    </Grid>
+                )}
+            </Container>
+
+            <Footer />
+        </Box>
+    );
 }
 
 export default RecycleWaste;

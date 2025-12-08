@@ -4,23 +4,41 @@ const jwt = require("jsonwebtoken");
 const salt = 10;
 
 const register = (req, res) => {
-    const { fullName, phone, password, role, descriptionRole } = req.body;
-    const defaultProfileImage = 'default-profile-picture1.png';
-    if (!fullName || !phone || !password || !role) {
-        return res.status(400).json({ Error: "Missing required fields" });
+const { fullName, phone, password, role, descriptionRole } = req.body;
+const defaultProfileImage = 'default-profile-picture1.png';
+if (!fullName || !phone || !password || !role) {
+return res.status(400).json({ Error: "Missing required fields" });
+}
+
+const checkPhoneSQL = "SELECT * FROM details WHERE phone = ?";
+db.query(checkPhoneSQL, [phone], (err, result) => {
+    if (err) {
+        console.error(err);
+        return res.status(500).json({ Error: "Error checking phone number" });
     }
 
-    const checkPhoneSQL = "SELECT * FROM details WHERE phone = ?";
-    db.query(checkPhoneSQL, [phone], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ Error: "Error checking phone number" });
-        }
+    if (result.length > 0) {
+        return res.status(400).json({ Error: "Phone number already registered" });
+    }
 
-        if (result.length > 0) {
-            return res.status(400).json({ Error: "Phone number already registered" });
-        }
+    // สำหรับ role 2 หรือ 3 ตรวจสอบ descriptionRole ซ้ำ
+    if ((role === "2" || role === "3") && descriptionRole) {
+        const checkDescSQL = "SELECT * FROM villagers WHERE vill_descriptionRole = ?";
+        db.query(checkDescSQL, [descriptionRole], (err, descResult) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ Error: "Error checking village/agency name" });
+            }
+            if (descResult.length > 0) {
+                return res.status(400).json({ Error: `ชื่อหมู่บ้าน/หน่วยงาน '${descriptionRole}' ถูกใช้งานแล้ว` });
+            }
+            createUser();
+        });
+    } else {
+        createUser();
+    }
 
+    function createUser() {
         bcrypt.hash(password.toString(), salt, (err, hash) => {
             if (err) return res.json({ Error: "Error hashing password" });
 
@@ -35,7 +53,7 @@ const register = (req, res) => {
 
                 if (role === "1") {
                     const collectorSQL = "INSERT INTO collectors (`details_id`, `coll_fullName`, `coll_descriptionRole`, `coll_profileImage`) VALUES (?, ?, ?, ?)";
-                    db.query(collectorSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
+                    db.query(collectorSQL, [detailID, fullName, descriptionRole || '', defaultProfileImage], (err, result) => {
                         if (err) {
                             console.error("Error inserting into collectors", err);
                             return res.status(500).json({ Error: "Register Failed (1)" });
@@ -43,7 +61,6 @@ const register = (req, res) => {
 
                         const coll_id = result.insertId;
                         const token = jwt.sign({ name: fullName, coll_id: coll_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-
                         return res.json({ Status: "Success", token: token });
                     });
                 } else if (role === "2" || role === "3") {
@@ -56,12 +73,11 @@ const register = (req, res) => {
 
                         const vill_id = result.insertId;
                         const token = jwt.sign({ name: fullName, vill_id: vill_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-                        
                         return res.json({ Status: "Success", token: token });
                     });
                 } else if (role === "4") {
                     const adminSQL = "INSERT INTO admins (`details_id`, `admin_fullName`, `admin_descriptionRole`, `admin_profileImage`) VALUES (?, ?, ?, ?)";
-                    db.query(adminSQL, [detailID, fullName, descriptionRole, defaultProfileImage], (err, result) => {
+                    db.query(adminSQL, [detailID, fullName, descriptionRole || '', defaultProfileImage], (err, result) => {
                         if (err) {
                             console.error("Error inserting into admins", err);
                             return res.status(500).json({ Error: "Register Failed (4)" });
@@ -69,7 +85,6 @@ const register = (req, res) => {
 
                         const admin_id = result.insertId;
                         const token = jwt.sign({ name: fullName, admin_id: admin_id, role: role }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-                        
                         return res.json({ Status: "Success", token: token });
                     });
                 } else {
@@ -77,7 +92,9 @@ const register = (req, res) => {
                 }
             });
         });
-    });
+    }
+});
+
 };
 
 module.exports = register;

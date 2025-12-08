@@ -275,60 +275,120 @@ router.get('/waste-price', (req, res) => {
     return res.status(200).json({ status: "success" });
   })
 
-  //get garbagetruckschedule
-router.get('/garbagetruckschedule', (req, res) => { 
-  return res.status(200).json({ status: "success"});
+
+// ตารางรถขยะ (Guest)
+const garbageDataGuest = {
+    Monday: {
+        dayName: 'วันจันทร์',
+        type: 'ขยะเปื้อน / เปียกน้ำ',
+        themeColor: '#EAB308',
+        icon: 'bi-droplet-fill',
+        heading: 'ประเภทขยะเปื้อนและเปียกน้ำ',
+        description: 'ขยะที่มีการปนเปื้อนสารอินทรีย์ หรือเปียกชื้น ไม่สามารถนำไปรีไซเคิลได้ง่าย',
+        link: '/schedule/monday'
+    },
+    Tuesday: {
+        dayName: 'วันอังคาร',
+        type: 'ขยะเชื้อเพลิง / พลังงาน',
+        themeColor: '#DB2777',
+        icon: 'bi-lightning-charge-fill',
+        heading: 'ประเภทขยะเชื้อเพลิง (RDF)',
+        description: 'ขยะแห้งที่ผ่านการคัดแยกแล้ว สามารถนำไปเป็นเชื้อเพลิงทดแทน',
+        link: '/schedule/tuesday'
+    },
+    Wednesday: {
+        dayName: 'วันพุธ',
+        type: 'ขยะห้องน้ำ',
+        themeColor: '#16A34A',
+        icon: 'bi-trash-fill',
+        heading: 'ประเภทขยะห้องน้ำ',
+        description: 'ขยะทั่วไปที่เกิดจากการใช้งานสุขอนามัย',
+        link: '/schedule/wednesday'
+    },
+    Friday: {
+        dayName: 'วันศุกร์',
+        type: 'ขยะอันตราย',
+        specialTag: 'ระวังอันตราย',
+        themeColor: '#2563EB',
+        icon: 'bi-exclamation-triangle-fill',
+        heading: 'ประเภทขยะอันตราย',
+        description: 'ขยะที่มีสารปนเปื้อนวัตถุอันตราย ห้ามทิ้งรวมกับขยะอื่น',
+        link: '/schedule/friday'
+    }
+};
+
+// Route ตารางรถขยะทั้งหมด
+router.get('/garbagetruckschedule', (req, res) => {
+    res.status(200).json({ status: "success", data: garbageDataGuest });
 });
 
-router.get('/garbageData', (req, res) => {
-  return res.status(200).json({ status: "success"});
-});
+// Route รายวัน
+router.get('/schedule/monday', (req, res) => res.json({ status: "success", data: garbageDataGuest.Monday }));
+router.get('/schedule/tuesday', (req, res) => res.json({ status: "success", data: garbageDataGuest.Tuesday }));
+router.get('/schedule/wednesday', (req, res) => res.json({ status: "success", data: garbageDataGuest.Wednesday }));
+router.get('/schedule/friday', (req, res) => res.json({ status: "success", data: garbageDataGuest.Friday }));
 
-//get all category
-router.get('/BathroomWaste', (req, res) => {
-    return res.status(200).json({ status: "success", name: req.name});
-  });
-
-  router.get('/bigwaste', (req, res) => {
-    return res.status(200).json({ status: "success"});
-  });
-  
-  router.get('/composablewaste', (req, res) => {
-    return res.status(200).json({ status: "success"});
-  });
-
-  router.get('/dirtywaste', (req, res) => {
-    return res.status(200).json({ status: "success" });
-  });
-
-  router.get('/EnergyRDFwaste', (req, res) => {
-    return res.status(200).json({ status: "success" });
-  });
-
-  router.get('/sellwaste', (req, res) => {
-    return res.status(200).json({ status: "success" });
-  });
-
-  router.get('/hazardouswaste', (req, res) => {
-    return res.status(200).json({ status: "success" });
-  })
-
-  // Get all waste categories
+// GET: Category list (for /category)
 router.get('/category', (req, res) => {
     const search = req.query.search || '';
-    const query = `SELECT * FROM waste_categories WHERE name LIKE ? OR description LIKE ?`;
-  
-    const values = [`%${search}%`, `%${search}%`];
-  
-    db.query(query, values, (err, result) => {
-        if (err) {
-            return res.status(500).json({ Error: err.message });
-        }
+
+    const query = `
+        SELECT * FROM waste_categories
+        WHERE name LIKE ? OR description LIKE ?
+    `;
+
+    db.query(query, [`%${search}%`, `%${search}%`], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
         return res.status(200).json({
             status: "success",
             results: result
         });
     });
-  });;
+});
 
+// GET: waste category detail by type
+router.get('/waste/type/:type', (req, res) => {
+    const type = req.params.type.toLowerCase();
+
+    const validTypes = [
+        "bathroom", "big", "composable",
+        "dirty", "energyrdf", "hazardous",
+        "recycle"
+    ];
+
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: "Invalid waste type" });
+    }
+
+    db.query(`SELECT * FROM waste_categories WHERE type = ?`, [type], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        return res.status(200).json({
+            status: "success",
+            results: result
+        });
+    });
+});
+
+//RecycleWaste
+// -------------------- Sell Waste --------------------
+router.get('/sellwaste/:category', (req, res) => {
+    const category = req.params.category.toLowerCase();
+    const categoryMap = { glass: 1, plastic: 2, metal: 3, paper: 4 };
+    const subWasteTypeId = categoryMap[category];
+    if (!subWasteTypeId) return res.status(400).json({ status: "error", message: "Invalid category" });
+
+    const sql = `
+        SELECT item_id, item_name, price_per_kg
+        FROM recycle_waste_items
+        WHERE subWasteType_id = ?
+    `;
+
+    db.query(sql, [subWasteTypeId], (err, rows) => {
+        if (err) return res.status(500).json({ status: "error", message: "Server error" });
+        res.status(200).json({ status: "success", data: rows });
+    });
+});
+  
 module.exports = router;

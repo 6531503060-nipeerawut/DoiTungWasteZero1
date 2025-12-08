@@ -1,0 +1,7 @@
+/* index.css */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap');
+
+body {
+  font-family: 'Sarabun', sans-serif;
+  background-color: #F7F9F6; /* สีพื้นหลังขาวอมเขียวอ่อน */
+}

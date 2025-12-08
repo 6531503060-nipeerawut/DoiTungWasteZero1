@@ -1,147 +1,243 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaBars } from 'react-icons/fa';
-import axios from 'axios';
-import { Button, Menu, MenuItem, Typography } from '@mui/material';
-import { AccountCircle } from '@mui/icons-material';
+//Header.jsx (Guest)
+import React, { useState } from 'react';
+import { 
+    AppBar, 
+    Toolbar, 
+    Typography, 
+    Box, 
+    Container, 
+    Button, 
+    IconButton,
+    Drawer,
+    List,
+    ListItem,
+    Divider
+} from '@mui/material';
+import { Link, useLocation } from 'react-router-dom';
+import MenuIcon from '@mui/icons-material/Menu'; 
+import LoginIcon from '@mui/icons-material/Login';
+import RecyclingIcon from '@mui/icons-material/Recycling';
 
-function Header({ type = 'default' }) {
-    const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const [anchorEl, setAnchorEl] = useState(null);
-    const dropdownRef = useRef(null);
-    const navigate = useNavigate();
+// Icons สำหรับเมนูใน Drawer (Mobile)
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import CategoryIcon from '@mui/icons-material/Category';
+import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
+import Co2Icon from '@mui/icons-material/Co2';
+import HomeIcon from '@mui/icons-material/Home';
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownOpen(false);
-            }
-        };
-        if (isDropdownOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isDropdownOpen]);
+// รายการเมนูตามที่คุณต้องการ
+const menuItems = [
+    // ผมขออนุญาตเพิ่มหน้าหลักเข้าไปด้วยเพื่อให้ Navigation สมบูรณ์
+    { label: 'หน้าหลัก', path: '/', icon: <HomeIcon /> }, 
+    { label: 'ราคารับซื้อ', path: '/waste-price', icon: <MonetizationOnIcon /> },
+    { label: 'ประเภทขยะ', path: '/category', icon: <CategoryIcon /> },
+    { label: 'ตารางรถเก็บขยะ', path: '/GarbageTruckSchedule', icon: <DirectionsBusIcon /> },
+    { label: 'คำนวณคาร์บอน', path: '/notfoundguest', icon: <Co2Icon /> },
+];
 
-    const handleLogout = async () => {
-        try {
-            await axios.get(`${process.env.REACT_APP_BACKEND_URL}/logout`);
-            navigate('/login');
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
+function Header() {
+    const location = useLocation();
+    
+    // State สำหรับ Mobile Drawer (เมนูด้านข้าง)
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
     };
 
-    const handleMenuClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
+    // เช็ค Active Link
+    const isActive = (path) => location.pathname === path;
 
-    const handleCloseMenu = () => {
-        setAnchorEl(null);
-    };
-
-    const renderDefaultNavbar = () => (
-        <nav className="navbar navbar-expand-lg navbar-light" style={{ background: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)' }}>
-            <Link className="navbar-brand" to="/">
-                <Typography variant="h6" color="#ffffff">DoiTung Zero-Waste</Typography>
-            </Link>
-            <div className="ms-auto" ref={dropdownRef}>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
-                    onClick={handleMenuClick}
-                    startIcon={<FaBars />}
-                    sx={{ backgroundColor: '#4f83cc', '&:hover': { backgroundColor: '#6fa8e5' }}}
-                >
-                </Button>
-
-                <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleCloseMenu}
-                    MenuListProps={{
-                        'aria-labelledby': 'menu-button',
+    // --- ส่วนแสดงผล Mobile Drawer (เมนูสไลด์ข้าง) ---
+const drawer = (
+    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
+        <Box sx={{ py: 2, backgroundColor: '#1A3C34', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <RecyclingIcon />
+            <Typography variant="h6" sx={{ fontFamily: 'Sarabun' }}>
+                เมนูหลัก
+            </Typography>
+        </Box>
+        <Divider />
+        <List>
+            {menuItems.map((item) => (
+                <ListItem 
+                    key={item.label} 
+                    component={Link} 
+                    to={item.path}
+                    disablePadding
+                    sx={{ 
+                        color: isActive(item.path) ? '#2E5D4B' : 'inherit',
+                        backgroundColor: isActive(item.path) ? '#F4F6F0' : 'transparent',
+                        borderRight: isActive(item.path) ? '4px solid #D4AF37' : 'none'
                     }}
                 >
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/waste-price">ราคารับซื้อ</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/category">ประเภทขยะ</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/GarbageTruckSchedule">ตารางรถเก็บขยะ</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Button 
-                            className="dropdown-item text-danger"
-                            onClick={handleLogout}
-                            startIcon={<AccountCircle />}
-                        >
-                            ออกจากระบบ
-                        </Button>
-                    </MenuItem>
-                </Menu>
-            </div>
-        </nav>
-    );
+                    <Button 
+                        fullWidth 
+                        startIcon={item.icon}
+                        sx={{ 
+                            justifyContent: 'flex-start', 
+                            color: 'inherit',
+                            py: 1.5,
+                            pl: 3,
+                            fontFamily: 'Sarabun',
+                            fontWeight: isActive(item.path) ? 700 : 400,
+                            textTransform: 'none'
+                        }}
+                    >
+                        {item.label}
+                    </Button>
+                </ListItem>
+            ))}
 
-    const renderMenuNavbar = () => (
-        <nav className="navbar navbar-expand-lg navbar-light" style={{ background: 'linear-gradient(135deg, #a1c4fd, #c2e9fb)' }}>
-            <Link className="navbar-brand" to="/">
-                <Typography variant="h6" color="#ffffff">DoiTung Zero-Waste</Typography>
-            </Link>
-            <div className="ms-auto" ref={dropdownRef}>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
-                    onClick={handleMenuClick}
-                    startIcon={<FaBars />}
-                    sx={{ backgroundColor: '#4f83cc', '&:hover': { backgroundColor: '#6fa8e5' }}}
-                >
-                </Button>
+            <Divider sx={{ my: 1 }} />
 
-                <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleCloseMenu}
-                    MenuListProps={{
-                        'aria-labelledby': 'menu-button',
+            {/* ปุ่มเข้าสู่ระบบสำหรับ Mobile Drawer */}
+            <ListItem disablePadding>
+                <Button
+                    component={Link}
+                    to="/login"
+                    fullWidth
+                    startIcon={<LoginIcon />}
+                    sx={{
+                        justifyContent: 'flex-start',
+                        color: '#D4AF37',
+                        py: 1.5,
+                        pl: 3,
+                        fontFamily: 'Sarabun',
+                        fontWeight: 500,
+                        textTransform: 'none'
                     }}
                 >
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/waste-price">ราคารับซื้อ</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/category">ประเภทขยะ</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/GarbageTruckSchedule">ตารางรถเก็บขยะ</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Link className="dropdown-item" to="/carbons">คำนวณคาร์บอน</Link>
-                    </MenuItem>
-                    <MenuItem onClick={handleCloseMenu}>
-                        <Button 
-                            className="dropdown-item text-danger"
-                            onClick={handleLogout}
-                            startIcon={<AccountCircle />}
-                        >
-                            ออกจากระบบ
-                        </Button>
-                    </MenuItem>
-                </Menu>
-            </div>
-        </nav>
-    );
+                    เข้าสู่ระบบ
+                </Button>
+            </ListItem>
+
+        </List>
+    </Box>
+);
+
 
     return (
-        <header>
-            {type === 'menu' ? renderMenuNavbar() : renderDefaultNavbar()}
-        </header>
+        <>
+            <AppBar position="sticky" elevation={0} sx={{ backgroundColor: '#2E5D4B',borderBottom: '2px solid #D4AF37', zIndex: 1200 }}>
+                <Container maxWidth="xl">
+                    <Toolbar disableGutters sx={{ minHeight: { xs: 60, md: 70 }, justifyContent: 'space-between' }}>
+                        
+                        {/* 1. Mobile Hamburger Icon (Left) */}
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            edge="start"
+                            onClick={handleDrawerToggle}
+                            sx={{ mr: 2, display: { md: 'none' }, color: '#D4AF37' }} // สีทอง
+                        >
+                            <MenuIcon />
+                        </IconButton>
+
+                        {/* 2. Branding / Logo */}
+                        <Box 
+                            display="flex" 
+                            alignItems="center" 
+                            gap={1.5} 
+                            component={Link} 
+                            to="/" 
+                            sx={{ 
+                                textDecoration: 'none', 
+                                color: 'inherit',
+                                flexGrow: { xs: 1, md: 0 }
+                            }}
+                        >
+                            {/* โลโก้เดียวกับ Collector */}
+                            <Box 
+                                sx={{
+                                    bgcolor: 'white',
+                                    borderRadius: '50%',
+                                    p: 0.7,
+                                    display: 'flex',
+                                }}
+                            >
+                                <RecyclingIcon sx={{ color: '#2E5D4B', fontSize: { xs: 26, md: 30 } }} />
+                            </Box>
+
+                            <Box>
+                                <Typography 
+                                    variant="subtitle1" 
+                                    sx={{
+                                        fontWeight: 700, 
+                                        lineHeight: 1.2, 
+                                        color: '#fff',
+                                        fontSize: { xs: '0.9rem', md: '1rem'}
+                                    }}
+                                >
+                                    DoiTung Zero-Waste
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* 3. Desktop Menu (Center/Right) */}
+                        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2, mx: 4 }}>
+                            {menuItems.map((item) => (
+                                <Button
+                                    key={item.label}
+                                    component={Link}
+                                    to={item.path}
+                                    sx={{
+                                        my: 2,
+                                        color: isActive(item.path) ? '#D4AF37' : 'white',
+                                        fontWeight: isActive(item.path) ? 700 : 400,
+                                        fontSize: '0.95rem',
+                                        fontFamily: 'Sarabun, sans-serif',
+                                        whiteSpace: 'nowrap',
+                                        '&:hover': { color: '#D4AF37', bgcolor: 'transparent' }
+                                    }}
+                                >
+                                    {item.label}
+                                </Button>
+                            ))}
+                        </Box>
+
+                        {/* 4. Login Button */}
+                        <Box sx={{ flexGrow: 0 }}>
+                            <Button 
+                                component={Link}
+                                to="/login"
+                                variant="outlined" 
+                                sx={{ 
+                                    color: '#D4AF37', 
+                                    borderColor: '#D4AF37',
+                                    borderRadius: '20px',
+                                    px: 3,
+                                    fontFamily: 'Sarabun',
+                                    display: { xs: 'none', md: 'flex' },
+                                    '&:hover': { borderColor: '#fff', color: '#fff', bgcolor: 'rgba(212, 175, 55, 0.1)' }
+                                }}
+                            >
+                                เข้าสู่ระบบ
+                            </Button>
+                            {/* Mobile Login Icon */}
+                            <IconButton component={Link} to="/login" sx={{ display: { xs: 'flex', md: 'none' }, color: '#D4AF37' }}>
+                                <LoginIcon />
+                            </IconButton>
+                        </Box>
+
+                    </Toolbar>
+                </Container>
+            </AppBar>
+
+            {/* Mobile Drawer Implementation */}
+            <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{ keepMounted: true }} // Better open performance on mobile.
+                sx={{
+                    display: { xs: 'block', md: 'none' },
+                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
+                }}
+            >
+                {drawer}
+            </Drawer>
+        </>
     );
 }
 

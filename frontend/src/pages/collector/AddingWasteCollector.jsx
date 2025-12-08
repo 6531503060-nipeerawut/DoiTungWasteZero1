@@ -1,3 +1,4 @@
+// AddingWasteCollector.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -7,39 +8,48 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import UnauthorizedMessage from "../../components/UnauthorizedMessage";
 
+// MUI Components
+import {
+  Container, Paper, Typography, Box, Grid, TextField, MenuItem, Button,
+  FormControl, InputLabel, Select, InputAdornment, Alert, CircularProgress,
+  ToggleButton, ToggleButtonGroup, Snackbar, Fab, Dialog, DialogTitle,
+  DialogContent, DialogActions
+} from '@mui/material';
+
+// MUI Icons
+import {
+  Save as SaveIcon,
+  Clear as ClearIcon,
+  CalendarToday as CalendarIcon,
+  Scale as ScaleIcon,
+  Place as PlaceIcon,
+  Description as DescriptionIcon,
+  Business as BusinessIcon,
+  HomeWork as HomeWorkIcon,
+  UploadFile as UploadFileIcon, 
+  CloudUpload as CloudUploadIcon
+} from '@mui/icons-material';
+
 axios.defaults.withCredentials = true;
 
 function AddingWasteCollector() {
-  document.title = "DoiTung Zero-Waste";
+  document.title = "บันทึกขยะ (เจ้าหน้าที่) - DoiTung Zero-Waste";
+
   const [auth, setAuth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
   const [collId, setCollId] = useState(null);
-
-  const formatThaiDate = (date) => {
-    const d = new Date(date);
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear(); // + 543
-    return `${day}/${month}/${year}`;
-  };
-
-  const today = new Date();
-  today.setHours(today.getHours() + 7);
-
-  const [displayDate, setDisplayDate] = useState(formatThaiDate(today));
-
-  const formatDateForMySQL = (date) => {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = d.getDate().toString().padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const [submitting, setSubmitting] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  
+  // --- Excel Upload States ---
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState(null);
 
   const [formData, setFormData] = useState({
-    caw_date: formatDateForMySQL(today),
+    caw_date: new Date().toISOString().split("T")[0],
     caw_wasteType: "",
     caw_subWasteType: "",
     caw_wasteTotal: "",
@@ -48,25 +58,22 @@ function AddingWasteCollector() {
   });
 
   const [locations, setLocations] = useState([]);
-  const [isVillage, setIsVillage] = useState(true);
+  const [locationType, setLocationType] = useState("village"); 
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const today = new Date();
-    today.setHours(today.getHours() + 7);
-    setFormData((prev) => ({
-      ...prev,
-      caw_date: formatDateForMySQL(today),
-    }));
-    setDisplayDate(formatThaiDate(today));
-  }, [isVillage]);
+  const navigate = useNavigate();
 
+  const formatThaiDate = (date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+  const displayDate = formatThaiDate(new Date());
+
+  // Fetch Locations
   const fetchLocations = useCallback(async () => {
-    const formattedDate = formatDateForMySQL(new Date());
-    setFormData((prevData) => ({ ...prevData, caw_date: formattedDate }));
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/c/locations?village=${isVillage}`,
+        `${process.env.REACT_APP_BACKEND_URL}/c/locations?village=${locationType === 'village'}`,
         { withCredentials: true }
       );
       if (response.data.status === "success") {
@@ -78,20 +85,17 @@ function AddingWasteCollector() {
         setMessage(response.data.error || "Unauthorized access");
       }
     } catch (err) {
-      console.error("Error fetching locations:", err);
+      console.error(err);
       setError("Failed to fetch locations");
     } finally {
       setLoading(false);
     }
-  }, [isVillage]);
+  }, [locationType]);
 
-  useEffect(() => {
-    fetchLocations();
-  }, [fetchLocations]);
+  useEffect(() => { fetchLocations(); }, [fetchLocations]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     if (name === "caw_wasteType") {
       setFormData((prevData) => ({
         ...prevData,
@@ -99,21 +103,25 @@ function AddingWasteCollector() {
         caw_subWasteType: value === "5" ? prevData.caw_subWasteType : "",
       }));
     } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleLocationTypeChange = (event, newType) => {
+    if (newType !== null) {
+      setLocationType(newType);
+      setFormData(prev => ({ ...prev, caw_location: "" }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     const dataToSend = {
       ...formData,
-      caw_subWasteType:
-        formData.caw_wasteType === "5" ? formData.caw_subWasteType : null,
+      caw_subWasteType: formData.caw_wasteType === "5" ? formData.caw_subWasteType : null,
     };
 
     try {
@@ -124,26 +132,20 @@ function AddingWasteCollector() {
       );
 
       if (response.data.status === "success") {
-        alert("Data added successfully from collector");
-        navigate("/c/dashboard");
+        setOpenSnackbar(true);
+        setTimeout(() => navigate("/c/dashboard"), 1500);
       }
     } catch (err) {
-      console.error("Submission error:", err);
-      setError(err.response?.data?.error || "Failed to add waste data");
+      console.error(err);
+      setError(err.response?.data?.error || "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <h3>Loading...</h3>
-      </div>
-    );
-  }
-
   const resetForm = () => {
     setFormData({
-      caw_date: formatDateForMySQL(today),
+      caw_date: new Date().toISOString().split("T")[0],
       caw_wasteType: "",
       caw_subWasteType: "",
       caw_wasteTotal: "",
@@ -153,167 +155,351 @@ function AddingWasteCollector() {
     setError("");
   };
 
+  // --- Excel Upload Handlers ---
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setExcelFile(e.target.files[0]);
+      setUploadMessage(null); 
+    }
+  };
+
+  const handleUploadConfirm = async () => {
+    if (!excelFile) return;
+    
+    setUploading(true);
+    setUploadMessage(null);
+
+    const data = new FormData();
+    data.append("file", excelFile);
+
+    try {
+      // ✅ แก้ไข URL ให้ถูกต้อง (เติม /c)
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/c/upload-excel`,
+        data,
+        { withCredentials: true, headers: { "Content-Type": "multipart/form-data" } }
+      );
+      
+      setUploadMessage({ type: 'success', text: `อัปโหลดสำเร็จ: ${response.data.message}` });
+      
+      // ปิด Popup อัตโนมัติหลังสำเร็จ 2 วินาที
+      setTimeout(() => {
+          setShowUploadPopup(false);
+          setExcelFile(null);
+          setUploadMessage(null);
+          // window.location.reload(); // หากต้องการรีโหลดหน้า
+      }, 2000);
+
+    } catch (err) {
+      console.error(err);
+      const errorMsg = err.response?.data?.error || "การอัปโหลดล้มเหลว กรุณาตรวจสอบไฟล์และลองใหม่อีกครั้ง";
+      setUploadMessage({ type: 'error', text: errorMsg });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#F1F5F9' }}>
       {auth ? (
         <>
-          {/* Header */}
           <Header collId={collId} />
 
-          {/* Body */}
-          <div className="container mt-4">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h2 className="text-center fw-bold mb-4">
-                  เพิ่มรายการน้ำหนักขยะ
-                </h2>
-                <form onSubmit={handleSubmit}>
-                  {error && (
-                    <div className="alert alert-danger" role="alert">
-                      {error}
-                    </div>
-                  )}
-                  {/* วันที่ทิ้งขยะ */}
-                  <div className="mb-3">
-                    <label className="form-label">วันที่ทิ้งขยะ*</label>
-                    <input
-                      type="text"
-                      name="vaw_date"
+          <Container maxWidth="md" sx={{ mt: 4, mb: 12, flexGrow: 1 }}> 
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Box mb={4} textAlign="center">
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0F766E', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                  <ScaleIcon fontSize="large" /> บันทึกน้ำหนักขยะ
+                </Typography>
+                <Typography variant="body1" color="text.secondary" mt={1}>
+                  กรอกข้อมูลขยะที่จัดเก็บได้จากจุดรับทิ้งต่างๆ
+                </Typography>
+              </Box>
+
+              {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={3}>
+                  {/* Location & Date */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" color="text.primary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <PlaceIcon sx={{ mr: 1, color: '#64748B' }} /> ข้อมูลสถานที่
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="วันที่บันทึก"
                       value={displayDate}
-                      onChange={handleChange}
-                      readOnly
-                      required
-                      className="form-control"
+                      InputProps={{
+                        readOnly: true,
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CalendarIcon color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      variant="outlined"
+                      sx={{ bgcolor: '#F8FAFC' }}
                     />
-                  </div>
+                  </Grid>
 
-                  <div>
-                    <label className="block font-semibold mb-1">สถานที่</label>
-                    <select
-                      onChange={(e) =>
-                        setIsVillage(e.target.value === "village")
-                      }
-                      className="w-full border px-3 py-2 rounded mb-2"
+                  <Grid item xs={12} md={6} display="flex" justifyContent="center">
+                    <ToggleButtonGroup
+                      value={locationType}
+                      exclusive
+                      onChange={handleLocationTypeChange}
+                      aria-label="location type"
+                      fullWidth
                     >
-                      <option value="village">หมู่บ้าน</option>
-                      <option value="agency">หน่วยงาน</option>
-                    </select>
+                      <ToggleButton value="village">
+                        <HomeWorkIcon sx={{ mr: 1 }} /> หมู่บ้าน
+                      </ToggleButton>
+                      <ToggleButton value="agency">
+                        <BusinessIcon sx={{ mr: 1 }} /> หน่วยงาน
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </Grid>
 
-                    <select
-                      name="caw_location"
-                      value={formData.caw_location}
-                      onChange={handleChange}
-                      className="w-full border px-3 py-2 rounded"
-                      required
-                    >
-                      <option value="" disabled>
-                        เลือกสถานที่
-                      </option>
-                      {locations.map((loc) => (
-                        <option key={loc.id} value={loc.id}>
-                          {loc.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* ประเภทขยะ */}
-                  <div className="mb-3">
-                    <label className="form-label">ประเภทขยะ*</label>
-                    <select
-                      name="caw_wasteType"
-                      value={formData.caw_wasteType}
-                      onChange={handleChange}
-                      required
-                      className="form-select"
-                    >
-                      <option value="" disabled>
-                        เลือกประเภทขยะ
-                      </option>
-                      <option value="1">01 ขยะเปื้อน</option>
-                      <option value="2">02 ขยะห้องน้ำ</option>
-                      <option value="3">03 ขยะพลังงาน</option>
-                      <option value="4">04 ขยะอันตราย</option>
-                      <option value="5">05 วัสดุรีไซเคิล</option>
-                      <option value="6">06 ขยะย่อยสลาย</option>
-                      <option value="7">07 ขยะชิ้นใหญ่</option>
-                    </select>
-                  </div>
-
-                  {/* ประเภทขยะ (ย่อย) */}
-                  {formData.caw_wasteType === "5" && (
-                    <div className="mb-3">
-                      <label className="form-label">ประเภทขยะ (ย่อย)*</label>
-                      <select
-                        name="caw_subWasteType"
-                        value={formData.caw_subWasteType}
+                  <Grid item xs={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel>เลือกสถานที่จัดเก็บ</InputLabel>
+                      <Select
+                        name="caw_location"
+                        value={formData.caw_location}
                         onChange={handleChange}
-                        required
-                        className="form-select"
+                        label="เลือกสถานที่จัดเก็บ"
                       >
-                        <option value="" disabled>
-                          เลือกประเภทขยะย่อย
-                        </option>
-                        <option value="1">01 ขวดแก้ว</option>
-                        <option value="2">02 ขวดพลาสติกใส</option>
-                        <option value="3">
-                          03 เหล็ก/โลหะ/สังกะสี/กระป๋องอลูมิเนียม
-                        </option>
-                        <option value="4">04 กระดาษ</option>
-                      </select>
-                    </div>
+                        {locations.map((loc) => (
+                          <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Waste Details */}
+                  <Grid item xs={12} sx={{ mt: 2 }}>
+                    <Typography variant="h6" color="text.primary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <ScaleIcon sx={{ mr: 1, color: '#64748B' }} /> รายละเอียดขยะ
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth required>
+                      <InputLabel>ประเภทขยะหลัก</InputLabel>
+                      <Select
+                        name="caw_wasteType"
+                        value={formData.caw_wasteType}
+                        onChange={handleChange}
+                        label="ประเภทขยะหลัก"
+                      >
+                        <MenuItem value="1">01 ขยะเปื้อน</MenuItem>
+                        <MenuItem value="2">02 ขยะห้องน้ำ</MenuItem>
+                        <MenuItem value="3">03 ขยะพลังงาน</MenuItem>
+                        <MenuItem value="4">04 ขยะอันตราย</MenuItem>
+                        <MenuItem value="5">05 วัสดุรีไซเคิล</MenuItem>
+                        <MenuItem value="6">06 ขยะย่อยสลาย</MenuItem>
+                        <MenuItem value="7">07 ขยะชิ้นใหญ่</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {formData.caw_wasteType === "5" && (
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth required>
+                        <InputLabel>ประเภทขยะย่อย (รีไซเคิล)</InputLabel>
+                        <Select
+                          name="caw_subWasteType"
+                          value={formData.caw_subWasteType}
+                          onChange={handleChange}
+                          label="ประเภทขยะย่อย (รีไซเคิล)"
+                        >
+                          <MenuItem value="1">01 ขวดแก้ว</MenuItem>
+                          <MenuItem value="2">02 ขวดพลาสติกใส</MenuItem>
+                          <MenuItem value="3">03 โลหะ/กระป๋อง</MenuItem>
+                          <MenuItem value="4">04 กระดาษ</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
                   )}
 
-                  {/* น้ำหนักขยะ */}
-                  <div className="mb-3">
-                    <label className="form-label">น้ำหนักขยะ (กก.)*</label>
-                    <input
+                  <Grid item xs={12} md={formData.caw_wasteType === "5" ? 12 : 6}>
+                    <TextField
+                      fullWidth
+                      required
                       type="number"
+                      label="น้ำหนักขยะ (กิโลกรัม)"
                       name="caw_wasteTotal"
                       value={formData.caw_wasteTotal}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^\d*(\.\d{0,2})?$/.test(value)) {
-                          handleChange(e);
-                        }
+                        if (/^\d*(\.\d{0,2})?$/.test(value)) handleChange(e);
                       }}
-                      required
-                      className="form-control"
-                      step="0.01"
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">กก.</InputAdornment>,
+                      }}
                     />
-                  </div>
+                  </Grid>
 
-                  {/* รายละเอียดอื่น ๆ */}
-                  <div className="mb-3">
-                    <label className="form-label">รายละเอียดอื่น ๆ</label>
-                    <textarea
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="รายละเอียดเพิ่มเติม / หมายเหตุ"
                       name="caw_description"
                       value={formData.caw_description}
                       onChange={handleChange}
-                      className="form-control"
-                      rows="3"
-                    ></textarea>
-                  </div>
+                      placeholder="เช่น สภาพขยะ, ปัญหาที่พบ..."
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <DescriptionIcon color="action" sx={{ mt: -3 }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
 
-                  {/* ปุ่มกด */}
-                  <div className="d-flex justify-content-end gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
+                  {/* Action Buttons */}
+                  <Grid item xs={12} display="flex" justifyContent="flex-end" gap={2} mt={2}>
+                    <Button 
+                      variant="outlined" 
+                      color="secondary" 
                       onClick={resetForm}
+                      startIcon={<ClearIcon />}
+                      size="large"
                     >
-                      ยกเลิก
-                    </button>
-                    <button type="submit" className="btn btn-primary">
-                      ยืนยัน
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+                      ล้างข้อมูล
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      variant="contained" 
+                      color="primary" 
+                      size="large"
+                      disabled={submitting}
+                      startIcon={submitting ? <CircularProgress size={20} /> : <SaveIcon />}
+                    >
+                      {submitting ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </form>
+            </Paper>
+          </Container>
 
-          {/* Footer */}
+          {/* --- FAB Button to Open Upload Popup --- */}
+          <Box sx={{ position: "fixed", bottom: 100, right: 20, zIndex: 1000 }}>
+             <Fab
+                color="secondary"
+                variant="extended"
+                onClick={() => setShowUploadPopup(true)}
+                sx={{ 
+                    bgcolor: '#D4AF37', 
+                    color: '#1A3C34', 
+                    fontWeight: 'bold',
+                    boxShadow: 4,
+                    '&:hover': { bgcolor: '#C09E30' }
+                }}
+             >
+                <UploadFileIcon sx={{ mr: 1 }} />
+                นำเข้า Excel
+             </Fab>
+          </Box>
+
+          {/* --- Upload Excel Popup Dialog --- */}
+          <Dialog open={showUploadPopup} onClose={() => setShowUploadPopup(false)} fullWidth maxWidth="sm">
+            <DialogTitle sx={{ bgcolor: '#F1F5F9', borderBottom: '1px solid #E2E8F0' }}>
+                <Box display="flex" alignItems="center">
+                    <CloudUploadIcon color="primary" sx={{ mr: 1 }} />
+                    <Typography variant="h6" fontWeight="bold">อัปโหลดไฟล์ Excel</Typography>
+                </Box>
+            </DialogTitle>
+            <DialogContent sx={{ pt: 3 }}>
+                <Box 
+                    display="flex" 
+                    flexDirection="column" 
+                    alignItems="center" 
+                    justifyContent="center" 
+                    p={4} 
+                    border="2px dashed #CBD5E1" 
+                    borderRadius={2}
+                    bgcolor="#FAFAFA"
+                    mt={2}
+                >
+                    <input
+                        accept=".xlsx,.xls"
+                        style={{ display: "none" }}
+                        id="popup-upload-excel"
+                        type="file"
+                        onChange={handleFileSelect}
+                    />
+                    <label htmlFor="popup-upload-excel">
+                        <Button variant="outlined" component="span" startIcon={<UploadFileIcon />}>
+                            เลือกไฟล์
+                        </Button>
+                    </label>
+                    
+                    {excelFile && (
+                        <Typography variant="body1" mt={2} fontWeight="bold">
+                            ไฟล์ที่เลือก: {excelFile.name}
+                        </Typography>
+                    )}
+
+                    {!excelFile && (
+                        <Typography variant="body2" color="text.secondary" mt={1}>
+                            รองรับไฟล์ .xlsx หรือ .xls (รูปแบบตารางตามกำหนด)
+                        </Typography>
+                    )}
+                </Box>
+
+                {uploadMessage && (
+                    <Alert severity={uploadMessage.type} sx={{ mt: 2 }}>
+                        {uploadMessage.text}
+                    </Alert>
+                )}
+            </DialogContent>
+            <DialogActions sx={{ p: 2, borderTop: '1px solid #E2E8F0' }}>
+                <Button onClick={() => setShowUploadPopup(false)} color="inherit">
+                    ปิด
+                </Button>
+                <Button 
+                    onClick={handleUploadConfirm} 
+                    variant="contained" 
+                    color="primary"
+                    disabled={!excelFile || uploading}
+                    startIcon={uploading && <CircularProgress size={20} color="inherit" />}
+                >
+                    {uploading ? "กำลังอัปโหลด..." : "ยืนยันการอัปโหลด"}
+                </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Snackbar */}
+          <Snackbar
+            open={openSnackbar}
+            autoHideDuration={1500} 
+            onClose={() => setOpenSnackbar(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <Alert 
+                onClose={() => setOpenSnackbar(false)} 
+                severity="success" 
+                sx={{ width: '100%', boxShadow: 3 }}
+            >
+              การบันทึกข้อมูลเสร็จสมบูรณ์
+            </Alert>
+          </Snackbar>
+
           <Footer />
         </>
       ) : (

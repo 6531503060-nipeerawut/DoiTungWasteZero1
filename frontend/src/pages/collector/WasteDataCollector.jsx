@@ -6,9 +6,33 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import UnauthorizedMessage from '../../components/UnauthorizedMessage';
 
+// MUI Components
+import { 
+    Container, Paper, Typography, Box, Grid, FormControl, InputLabel, 
+    Select, MenuItem, Button, Table, TableBody, TableCell, TableContainer, 
+    TableHead, TableRow, Chip, Alert, CircularProgress, ToggleButtonGroup, ToggleButton
+} from '@mui/material';
+import { 
+    Search as SearchIcon, 
+    Business as BusinessIcon, 
+    HomeWork as HomeWorkIcon,
+    Inbox as InboxIcon,
+    FilterAlt as FilterAltIcon
+} from '@mui/icons-material';
+
+// --- Theme Constants ---
+const themeColors = {
+    primary: '#2E5D4B',    
+    secondary: '#8D6E63',  
+    accent: '#D4AF37',     
+    bg: '#F7F9F6',         
+    textHeader: '#1A3C34'  
+};
+
 axios.defaults.withCredentials = true;
+
 const WasteDataCollector = () => {
-    document.title = "DoiTung Zero-Waste";
+    document.title = "ข้อมูลรายการขยะ (เจ้าหน้าที่) - DoiTung Zero-Waste";
     const [auth, setAuth] = useState(false);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
@@ -33,7 +57,7 @@ const WasteDataCollector = () => {
             setCollId(response.data.coll_id);
             setError(null);
         } catch (err) {
-            setError(err.response?.data?.message || 'Error fetching data');
+            setError(err.response?.data?.message || 'ไม่สามารถดึงข้อมูลได้');
             setData([]);
             setName('');
         }
@@ -60,19 +84,19 @@ const WasteDataCollector = () => {
                     } else {
                         setOptions([]);
                         setAuth(false);
-                        setMessage('No options found');
+                        setMessage('ไม่พบตัวเลือกข้อมูล');
                     }
                 }
             } catch (err) {
                 if (err.response) {
                     if (err.response.status === 401 || err.response.status === 403) {
                         setAuth(false);
-                        setMessage('Unauthorized access');
+                        setMessage('ไม่มีสิทธิ์เข้าถึงข้อมูล');
                     } else {
-                        setMessage(err.response.data.message || 'Error fetching options');
+                        setMessage(err.response.data.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล');
                     }
                 } else {
-                    setMessage('Error connecting to server');
+                    setMessage('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
                 }
                 setOptions([]);
             } finally {
@@ -81,113 +105,219 @@ const WasteDataCollector = () => {
         };
 
         fetchOptions();
-    }, [type, search]);
+    }, [type, search]); // Added search dependency to handle initial load logic if needed.
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
         fetchData();
     };
 
+    const handleTypeChange = (event, newType) => {
+        if (newType !== null) {
+            setType(newType);
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+        return date.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
     const formatTime = (timeString) => {
         const date = new Date(timeString);
-        return date.toLocaleTimeString('th-TH', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
     };
 
     if (loading) {
         return (
-            <div className="d-flex justify-content-center align-items-center min-vh-100">
-                <h3>Loading...</h3>
-            </div>
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                <CircularProgress />
+            </Box>
         );
     }
 
     return (
-        <div className="d-flex flex-column min-vh-100 bg-light">
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
             {auth ? (
                 <>
-                    {/* Header */}
                     <Header collId={collId} />
 
-                    {/* Body */}
-                    <main className="container my-4 flex-grow-1">
-                        <div className="card shadow-sm border-0 p-4 bg-white rounded">
-                            <h2 className="text-center fw-bold mb-4">ปริมาณขยะที่ต้องการทิ้ง</h2>
-
-                            <div className="d-flex justify-content-center gap-4 mb-3">
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" value="หมู่บ้าน" checked={type === 'หมู่บ้าน'} onChange={() => setType('หมู่บ้าน')} />
-                                    <label className="form-check-label">หมู่บ้าน</label>
-                                </div>
-                                <div className="form-check form-check-inline">
-                                    <input className="form-check-input" type="radio" value="หน่วยงาน" checked={type === 'หน่วยงาน'} onChange={() => setType('หน่วยงาน')} />
-                                    <label className="form-check-label">หน่วยงาน</label>
-                                </div>
-                            </div>
-
-                            <form onSubmit={handleSearchSubmit} className="row g-3 justify-content-center">
-                                <div className="col-md-6">
-                                    <select className="form-select" value={search} onChange={(e) => setSearch(e.target.value)}>
-                                        {options.length > 0 ? (
-                                            options.map((option, index) => (
-                                                <option key={index} value={option}>{option}</option>
-                                            ))
-                                        ) : (
-                                            <option>ไม่มีข้อมูลขยะ</option>
-                                        )}
-                                    </select>
-                                    </div>
-                                <div className="col-auto">
-                                    <button type="submit" className="btn btn-success px-4 rounded-pill fw-bold shadow">ค้นหา</button>
-                                </div>
-                            </form>
-
-                        {message && <div className="alert alert-warning text-center">{message}</div>}
-                        {error && <div className="text-danger text-center mb-4">{error}</div>}
-                        {name && <p className="text-center mb-4">{name}</p>}
-
-                        <div className="table-responsive mt-4">
-                            <table className="w-3/4 bg-white border border-gray-300 mx-auto">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        <th className="px-4 py-2 border">วันที่</th>
-                                        <th className="px-4 py-2 border">เวลา</th>
-                                        <th className="px-4 py-2 border">ประเภทขยะ</th>
-                                        <th className="px-4 py-2 border">ประเภทขยะ (ย่อย)</th>
-                                        <th className="px-4 py-2 border">น้ำหนักขยะ (กก.)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.length === 0 ? (
-                                        <tr><td colSpan="5" className="text-center py-4">ไม่มีข้อมูล</td></tr>
-                                    ) : (
-                                        data.map((item, index) => (
-                                            <tr key={index} className="text-center border-t">
-                                                <td className="px-4 py-2 border">{formatDate(item.vaw_date)}</td>
-                                                <td className="px-4 py-2 border">{formatTime(item.vaw_time)}</td>
-                                                <td className="px-4 py-2 border">{item.wasteType_name}</td>
-                                                <td className="px-4 py-2 border">{item.subWasteType_name || ''}</td>
-                                                <td className="px-4 py-2 border">{item.vaw_wasteTotal}</td>
-                                            </tr>
-                                        ))
+                    <Container maxWidth="lg" sx={{ mt: 4, mb: 10, flexGrow: 1 }}>
+                                    
+                                    <Box mb={4} sx={{ borderLeft: `5px solid ${themeColors.accent}`, pl: 2 }}>
+                                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: themeColors.textHeader, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                             ข้อมูลขยะขาเข้า
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                            ตรวจสอบประวัติและปริมาณขยะที่บันทึก
+                                        </Typography>
+                                    </Box>
+                    
+                                    <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 2, border: '1px solid #E0E0E0', backgroundColor: '#fff' }}>
+                                        <form onSubmit={handleSearchSubmit}>
+                                            <Box display="flex" alignItems="center" mb={2}>
+                                                <FilterAltIcon sx={{ color: themeColors.secondary, mr: 1 }} />
+                                                <Typography variant="subtitle1" fontWeight="bold" color={themeColors.textHeader}>
+                                                    ตัวกรองการค้นหา
+                                                </Typography>
+                                            </Box>
+                    
+                                            <Grid container spacing={2} alignItems="center">
+                                                <Grid item xs={12} md={4}>
+                                                    <ToggleButtonGroup
+                                                        value={type}
+                                                        exclusive
+                                                        onChange={handleTypeChange}
+                                                        fullWidth
+                                                        sx={{ 
+                                                            height: '45px',
+                                                            '& .MuiToggleButton-root': { 
+                                                                borderColor: themeColors.primary,
+                                                                color: themeColors.primary,
+                                                                fontFamily: 'Sarabun',
+                                                                '&.Mui-selected': {
+                                                                    backgroundColor: themeColors.primary,
+                                                                    color: 'white',
+                                                                    '&:hover': { backgroundColor: '#1A3C34' }
+                                                                }
+                                                            } 
+                                                        }}
+                                                    >
+                                                        <ToggleButton value="หมู่บ้าน">
+                                                            <HomeWorkIcon sx={{ mr: 1, fontSize: 20 }} /> หมู่บ้าน
+                                                        </ToggleButton>
+                                                        <ToggleButton value="หน่วยงาน">
+                                                            <BusinessIcon sx={{ mr: 1, fontSize: 20 }} /> หน่วยงาน
+                                                        </ToggleButton>
+                                                    </ToggleButtonGroup>
+                                                </Grid>
+                    
+                                                <Grid item xs={12} md={6}>
+                                                    <FormControl fullWidth size="small">
+                                                        <InputLabel>เลือกสถานที่ / ชื่อ</InputLabel>
+                                                        <Select
+                                                            value={search}
+                                                            label="เลือกสถานที่ / ชื่อ"
+                                                            onChange={(e) => setSearch(e.target.value)}
+                                                            disabled={loading || options.length === 0}
+                                                            sx={{ fontFamily: 'Sarabun' }}
+                                                        >
+                                                            {options.length > 0 ? (
+                                                                options.map((option, idx) => (
+                                                                    <MenuItem key={idx} value={option} sx={{ fontFamily: 'Sarabun' }}>{option}</MenuItem>
+                                                                ))
+                                                            ) : (
+                                                                <MenuItem disabled>ไม่มีข้อมูล</MenuItem>
+                                                            )}
+                                                        </Select>
+                                                    </FormControl>
+                                                </Grid>
+                    
+                                                <Grid item xs={12} md={2}>
+                                                    <Button 
+                                                        type="submit" 
+                                                        variant="contained" 
+                                                        fullWidth 
+                                                        size="medium"
+                                                        startIcon={<SearchIcon />}
+                                                        sx={{ 
+                                                            height: '40px',
+                                                            borderRadius: 2, 
+                                                            textTransform: 'none', 
+                                                            fontWeight: 'bold', 
+                                                            backgroundColor: themeColors.accent,
+                                                            color: '#fff',
+                                                            fontFamily: 'Sarabun',
+                                                            '&:hover': { backgroundColor: '#BFA130' }
+                                                        }}
+                                                    >
+                                                        ค้นหา
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </form>
+                    
+                                        {message && <Alert severity="info" sx={{ mt: 2, fontFamily: 'Sarabun' }}>{message}</Alert>}
+                                        {error && <Alert severity="error" sx={{ mt: 2, fontFamily: 'Sarabun' }}>{error}</Alert>}
+                                    </Paper>
+                    
+                                    {loading && (
+                                        <Box display="flex" justifyContent="center" my={5}>
+                                            <CircularProgress sx={{ color: themeColors.primary }} />
+                                        </Box>
                                     )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </main>
+                    
+                                    {!loading && (
+                                        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                                            {name && (
+                                                <Box sx={{ bgcolor: themeColors.primary, p: 2, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <Typography variant="h6" fontWeight="bold" sx={{ fontFamily: 'Sarabun' }}>
+                                                        {name}
+                                                    </Typography>
+                                                    <Chip label="ประวัติรายการ" size="small" sx={{ bgcolor: 'white', color: themeColors.primary, fontWeight: 'bold' }} />
+                                                </Box>
+                                            )}
+                    
+                                            <TableContainer sx={{ maxHeight: 600 }}>
+                                                <Table stickyHeader aria-label="waste data table">
+                                                    <TableHead>
+                                                        <TableRow>
+                                                            <TableCell align="center" sx={{ backgroundColor: '#EFEFEF', color: themeColors.textHeader, fontWeight: 'bold', fontFamily: 'Sarabun' }}>วันที่</TableCell>
+                                                            <TableCell align="center" sx={{ backgroundColor: '#EFEFEF', color: themeColors.textHeader, fontWeight: 'bold', fontFamily: 'Sarabun' }}>เวลา</TableCell>
+                                                            <TableCell align="left" sx={{ backgroundColor: '#EFEFEF', color: themeColors.textHeader, fontWeight: 'bold', fontFamily: 'Sarabun' }}>ประเภทขยะ</TableCell>
+                                                            <TableCell align="left" sx={{ backgroundColor: '#EFEFEF', color: themeColors.textHeader, fontWeight: 'bold', fontFamily: 'Sarabun' }}>ประเภทย่อย</TableCell>
+                                                            <TableCell align="right" sx={{ backgroundColor: '#EFEFEF', color: themeColors.textHeader, fontWeight: 'bold', fontFamily: 'Sarabun' }}>น้ำหนัก (กก.)</TableCell>
+                                                        </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {data.length === 0 ? (
+                                                            <TableRow>
+                                                                <TableCell colSpan={5} align="center" sx={{ py: 20 }}>
+                                                                    <Box display="flex" flexDirection="column" alignItems="center" color="text.secondary">
+                                                                        <InboxIcon sx={{ fontSize: 60, opacity: 0.2, mb: 1 }} />
+                                                                        <Typography sx={{ fontFamily: 'Sarabun' }}>ไม่พบข้อมูลในช่วงเวลานี้</Typography>
+                                                                    </Box>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ) : (
+                                                            data.map((item, idx) => (
+                                                                <TableRow 
+                                                                    key={idx}
+                                                                    hover
+                                                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                                                >
+                                                                    <TableCell align="center" sx={{ fontFamily: 'Sarabun' }}>{formatDate(item.vaw_date)}</TableCell>
+                                                                    <TableCell align="center" sx={{ color: 'text.secondary', fontFamily: 'Sarabun' }}>{formatTime(item.vaw_time)}</TableCell>
+                                                                    <TableCell align="left" sx={{ fontFamily: 'Sarabun' }}>
+                                                                        <Chip 
+                                                                            label={item.wasteType_name} 
+                                                                            size="small" 
+                                                                            sx={{ 
+                                                                                bgcolor: '#E8F5E9', 
+                                                                                color: '#2E7D32', 
+                                                                                fontWeight: 500,
+                                                                                fontFamily: 'Sarabun'
+                                                                            }} 
+                                                                        />
+                                                                    </TableCell>
+                                                                    <TableCell align="left" sx={{ fontFamily: 'Sarabun' }}>{item.subWasteType_name || '-'}</TableCell>
+                                                                    <TableCell align="right">
+                                                                        <Typography fontWeight="bold" sx={{ color: themeColors.primary, fontFamily: 'Sarabun' }}>
+                                                                            {parseFloat(item.vaw_wasteTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                        </Typography>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))
+                                                        )}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        </Paper>
+                                    )}
+                    
+                                </Container>
+                
 
-                    {/* Footer */}
                     <Footer />
                 </>
             ) : (

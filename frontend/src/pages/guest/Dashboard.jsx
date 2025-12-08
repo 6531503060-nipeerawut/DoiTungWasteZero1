@@ -1,18 +1,31 @@
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import dayjs from 'dayjs';
 import buddhistEra from 'dayjs/plugin/buddhistEra';
-import React, { useEffect, useState } from 'react';
 
 import WasteChart from '../../components/WasteChart';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import CustomThaiDatePicker from './components/CustomThaiDatePicker';
+
+// MUI Components
+import { 
+    Container, Grid, Paper, Typography, Box, FormControl, InputLabel, 
+    Select, MenuItem, Divider, LinearProgress, Card, CardContent 
+} from '@mui/material';
+import { 
+    BarChart as BarChartIcon, 
+    PieChart as PieChartIcon,
+    FilterList as FilterIcon,
+    Dashboard as DashboardIcon 
+} from '@mui/icons-material';
 
 dayjs.extend(buddhistEra);
 
 function Dashboard() {
-    document.title = "DoiTung Zero-Waste";
+    document.title = "Dashboard - DoiTung Zero-Waste";
     
     const [dataSet, setDataSet] = useState('all');
     const [locationId, setLocationId] = useState('');
@@ -21,8 +34,9 @@ function Dashboard() {
     const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
     const [wasteData, setWasteData] = useState([]);
 
+    // Fetch Locations
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchLocations = async () => {
             if (dataSet === 'village' || dataSet === 'agency') {
                 try {
                     const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/dashboard-locations`, {
@@ -32,21 +46,20 @@ function Dashboard() {
 
                     if (response.data.status === 'success') {
                         setLocations(response.data.results);
-                    } else {
-                        console.error(response.data.error || "Unauthorized access");
+                        setLocationId('');
                     }
                 } catch (error) {
-                    console.error("An error occurred while fetching the data.");
-                    console.error(error);
+                    console.error("Error fetching locations:", error);
                 }
             } else {
                 setLocations([]);
                 setLocationId('');
             }
         };
-        fetchData();
+        fetchLocations();
     }, [dataSet]);
 
+    // Fetch Waste Data
     useEffect(() => {
         const fetchData = async () => {
             let formattedDate = date;
@@ -67,7 +80,6 @@ function Dashboard() {
                     },
                     withCredentials: true,
                 });
-
                 setWasteData(response.data.results);
             } catch (err) {
                 console.error(err);
@@ -77,121 +89,202 @@ function Dashboard() {
         fetchData();
     }, [dataSet, locationId, mode, date]);
 
+    // Calculate Total Weight
+    const totalWeight = wasteData.reduce((sum, item) => sum + parseFloat(item.total), 0);
+
     return (
-        <div className="d-flex flex-column min-vh-100 bg-light">
-            {/* Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#F1F5F9' }}>
             <Header />
 
-            {/* Body */}
-            <main className="container my-4 flex-grow-1">
-            <div className="card shadow-sm border-0 p-4 bg-white rounded">
-                <h2 className="text-center fw-bold mb-4">ปริมาณน้ำหนักขยะรวมตามแหล่งที่จัดเก็บ</h2>
-
-                    {/* Data Set Selector */}
-                    <div className="mb-4">
-                        <label className="block font-medium mb-1">เลือกชุดข้อมูล:</label>
-                        <select
-                            value={dataSet}
-                            onChange={e => setDataSet(e.target.value)}
-                            className="border rounded px-3 py-2 w-full"
-                        >
-                            <option value="all">ตำบลแม่ฟ้าหลวงทั้งหมด</option>
-                            <option value="village">หมู่บ้าน</option>
-                            <option value="agency">หน่วยงาน</option>
-                        </select>
+            <Container maxWidth="xl" sx={{ mt: 4, mb: 6, flexGrow: 1 }}>
+                        
+                {/* 1. Dashboard Title */}
+                <Box mb={4} display="flex" alignItems="center">
+                    <DashboardIcon sx={{ fontSize: 36, color: '#1E293B', mr: 2 }} />
+                    <div>
+                        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1E293B' }}>
+                            สรุปยอดจัดเก็บขยะ
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary">
+                            รายงานสถิติปริมาณขยะแยกตามแหล่งที่มาและประเภท
+                        </Typography>
                     </div>
+                </Box>
 
-                    {/* Location Selector */}
-                    {dataSet !== 'all' && (
-                        <div className="mb-4">
-                            <label className="block font-medium mb-1">ชื่อ{dataSet === 'village' ? 'หมู่บ้าน' : 'หน่วยงาน'}:</label>
-                            <select
-                                value={locationId}
-                                onChange={e => setLocationId(e.target.value)}
-                                className="border rounded px-3 py-2 w-full"
-                            >
-                                <option value="" disabled>-- เลือก --</option>
-                                {locations.map(loc => (
-                                    <option key={loc.id} value={loc.id}>{loc.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
+                {/* 2. Filter Control Panel */}
+                <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 3, border: '1px solid #E2E8F0' }}>
+                    <Box display="flex" alignItems="center" mb={2}>
+                        <FilterIcon color="primary" sx={{ mr: 1 }} />
+                        <Typography variant="subtitle1" fontWeight="bold">ตัวกรองข้อมูล</Typography>
+                    </Box>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12} md={3}>
+                            <FormControl fullWidth size="small">
+                                <InputLabel>ชุดข้อมูล</InputLabel>
+                                <Select
+                                    value={dataSet}
+                                    label="ชุดข้อมูล"
+                                    onChange={e => setDataSet(e.target.value)}
+                                >
+                                    <MenuItem value="all">🌐 ทั้งหมด (ตำบล)</MenuItem>
+                                    <MenuItem value="village">🏡 หมู่บ้าน</MenuItem>
+                                    <MenuItem value="agency">🏢 หน่วยงาน</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
 
-                    {/* Mode & Date */}
-                    <div className="mb-4 flex gap-2 items-center justify-center">
-                        <label className="block font-medium">ดูราย:</label>
-                        <select
-                            value={mode}
-                            onChange={e => setMode(e.target.value)}
-                            className="border rounded px-3 py-2"
-                        >
-                            <option value="day">วัน</option>
-                            <option value="month">เดือน</option>
-                            <option value="year">ปี</option>
-                        </select>
+                        <Grid item xs={12} md={3}>
+                            <FormControl fullWidth size="small" disabled={dataSet === 'all'}>
+                                <InputLabel>เลือกพื้นที่</InputLabel>
+                                <Select
+                                    value={locationId}
+                                    label="เลือกพื้นที่"
+                                    onChange={e => setLocationId(e.target.value)}
+                                >
+                                    <MenuItem value="" disabled>-- เลือกสถานที่ --</MenuItem>
+                                    {locations.map(loc => (
+                                        <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
 
-                        {mode === 'day' || mode === 'month' ? (
-                            <input
-                                type={mode === 'day' ? 'date' : 'month'}
-                                value={date}
-                                onChange={e => setDate(e.target.value)}
-                                className="border rounded px-3 py-2"
+                        <Grid item xs={12} md={3}>
+                            <FormControl fullWidth size="small">
+                                <InputLabel>ช่วงเวลา</InputLabel>
+                                <Select
+                                    value={mode}
+                                    label="ช่วงเวลา"
+                                    onChange={e => setMode(e.target.value)}
+                                >
+                                    <MenuItem value="day">📅 รายวัน</MenuItem>
+                                    <MenuItem value="month">🗓 รายเดือน</MenuItem>
+                                    <MenuItem value="year">📆 รายปี</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid item xs={12} md={3}>
+                            <CustomThaiDatePicker
+                                date={date}
+                                setDate={setDate}
+                                mode={mode}
                             />
-                        ) : (
-                            <input
-                                type="number"
-                                min="2560"
-                                max="2600"
-                                value={parseInt(date) + 543}
-                                onChange={e =>
-                                    setDate((parseInt(e.target.value) - 543).toString())
-                                }
-                                className="border rounded px-3 py-2"
-                            />
-                        )}
-                    </div>
+                        </Grid>
+                    </Grid>
+                </Paper>
 
-                    {/* WasteChart */}
-                    <div className="my-6">
-                        {wasteData.length > 0 && (
-                            <WasteChart
-                                data={wasteData}
-                                options={{
-                                    plugins: {
-                                        tooltip: {
-                                            callbacks: {
-                                                label: function (context) {
-                                                    const value = context.raw;
-                                                    const total = context.chart._metasets[context.datasetIndex].total;
-                                                    const percentage = ((value / total) * 100).toFixed(2);
-                                                    return `${context.label}: ${value.toLocaleString()} กก. (${percentage}%)`;
-                                                }
+                {/* 3. Main Content Grid (Layout Updated) */}
+                <Grid container spacing={3} alignItems="stretch"> {/* alignItems="stretch" ช่วยให้ Grid item สูงเท่ากัน */}
+                    
+                    {/* Left: Chart */}
+                    {/* ✅ กำหนดความสูงคงที่สำหรับ Desktop (lg) */}
+                    <Grid item xs={12} lg={8} sx={{ height: { lg: '500px', xs: 'auto' } }}>
+                        <Paper elevation={2} sx={{ p: 3, borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <Box display="flex" alignItems="center" mb={2} flexShrink={0}>
+                                <BarChartIcon color="primary" sx={{ mr: 1 }} />
+                                <Typography variant="h6" fontWeight="bold" color="primary">
+                                    กราฟแสดงสัดส่วนขยะ
+                                </Typography>
+                            </Box>
+                            <Divider sx={{ mb: 3 }} />
+                            
+                            <Box sx={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
+                                {wasteData.length > 0 ? (
+                                    <WasteChart
+                                        data={wasteData}
+                                        options={{
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { position: 'bottom' }
                                             }
-                                        }
-                                    }
-                                }}
-                            />
-                        )}
-                    </div>
+                                        }}
+                                    />
+                                ) : (
+                                    <Box height="100%" display="flex" flexDirection="column" justifyContent="center" alignItems="center" color="text.secondary">
+                                        <Typography>ไม่พบข้อมูลสำหรับการแสดงผล</Typography>
+                                    </Box>
+                                )}
+                            </Box>
+                        </Paper>
+                    </Grid>
 
-                    {/* ถ้าไม่มีข้อมูลขยะ */}
-                    {wasteData.length === 0 && (
-                        <p className="text-gray-500 text-center">ไม่มีข้อมูลขยะสำหรับช่วงเวลานี้</p>
-                    )}
+                    {/* Right: Summary & Details */}
+                    {/* ✅ กำหนดความสูงเท่ากับด้านซ้าย และใช้ Flexbox จัดการภายใน */}
+                    <Grid item xs={12} lg={4} sx={{ height: { lg: '500px', xs: 'auto' } }}>
+                        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            
+                            {/* Total Summary Card (ขนาดคงที่ตามเนื้อหา) */}
+                            <Card elevation={2} sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #0F766E 0%, #115E59 100%)', color: 'white', flexShrink: 0 }}>
+                                <CardContent>
+                                    <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>ปริมาณขยะรวมทั้งหมด</Typography>
+                                    <Typography variant="h3" fontWeight="bold" sx={{ my: 1 }}>
+                                        {totalWeight.toLocaleString()} <span style={{fontSize: '1.5rem'}}>กก.</span>
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                                        จาก {wasteData.length} ประเภทขยะ
+                                    </Typography>
+                                </CardContent>
+                            </Card>
 
-                    {/* Table List */}
-                    <ul className="text-sm">
-                        {wasteData.map(item => (
-                            <li key={item.wasteType_name}>
-                                {item.wasteType_name} ... {parseFloat(item.total).toLocaleString()} กก.
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </main>
+                            {/* Detail List (ยืดเต็มพื้นที่ที่เหลือ) */}
+                            <Paper elevation={2} sx={{ p: 3, borderRadius: 3, flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                                <Box display="flex" alignItems="center" mb={2} flexShrink={0}>
+                                    <PieChartIcon color="warning" sx={{ mr: 1 }} />
+                                    <Typography variant="h6" fontWeight="bold" color="#1E293B">
+                                        รายละเอียดแยกประเภท
+                                    </Typography>
+                                </Box>
+                                <Divider sx={{ mb: 2 }} />
 
-            {/* Footer */}
+                                {/* Scrollable Area */}
+                                <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 1 }}>
+                                    {wasteData.length > 0 ? (
+                                        <Box display="flex" flexDirection="column" gap={2}>
+                                            {wasteData.map((item, index) => {
+                                                const val = parseFloat(item.total);
+                                                const percent = totalWeight > 0 ? (val / totalWeight) * 100 : 0;
+                                                
+                                                return (
+                                                    <Box key={index} sx={{ p: 1.5, borderRadius: 2, bgcolor: '#F8FAFC', border: '1px solid #F1F5F9' }}>
+                                                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                                                            <Typography variant="body2" fontWeight="bold" color="#334155">
+                                                                {item.wasteType_name}
+                                                            </Typography>
+                                                            <Typography variant="body2" fontWeight="bold" color="primary">
+                                                                {val.toLocaleString()} กก.
+                                                            </Typography>
+                                                        </Box>
+                                                        <Box display="flex" alignItems="center" gap={1}>
+                                                            <LinearProgress 
+                                                                variant="determinate" 
+                                                                value={percent} 
+                                                                sx={{ flexGrow: 1, height: 6, borderRadius: 5 }} 
+                                                            />
+                                                            <Typography variant="caption" color="text.secondary" width="35px" textAlign="right">
+                                                                {percent.toFixed(1)}%
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Box>
+                                    ) : (
+                                        <Box height="100%" display="flex" alignItems="center" justifyContent="center">
+                                            <Typography align="center" color="text.secondary">
+                                                ไม่มีรายการข้อมูล
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Paper>
+                        </Box>
+                    </Grid>
+                </Grid>
+
+            </Container>
+
             <Footer />
         </div>
     );

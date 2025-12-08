@@ -215,11 +215,22 @@ router.get('/wastedatavillager', verifyUser, (req, res) => {
 
         const vill_id = villResult[0].vill_id;
 
-        const query1 = `SELECT villagerAddWeights.vill_id, vaw_id, vaw_date, vaw_time, wasteTypes.wasteType_name, subWasteTypes.subWasteType_name, vaw_wasteTotal
+        const query1 = `
+            SELECT 
+                villagerAddWeights.vill_id, 
+                vaw_id, 
+                vaw_date, 
+                vaw_time, 
+                wasteTypes.wasteType_name, 
+                subWasteTypes.subWasteType_name, 
+                vaw_wasteTotal,
+                villagerAddWeights.vaw_wasteType,      
+                villagerAddWeights.vaw_subWasteType    
             FROM villagerAddWeights
             JOIN wasteTypes ON villagerAddWeights.vaw_wasteType = wasteTypes.wasteType_id
             LEFT JOIN subWasteTypes ON villagerAddWeights.vaw_subWasteType = subWasteTypes.subWasteType_id
-            WHERE villagerAddWeights.vill_id = ?`;
+            WHERE villagerAddWeights.vill_id = ?
+            ORDER BY vaw_date DESC, vaw_time DESC`; // แนะนำให้เรียงลำดับวันที่ล่าสุดขึ้นก่อน
 
         db.query(query1, [vill_id], (err, result) => {
             if (err) {
@@ -439,92 +450,103 @@ router.get('/verify', verifyUser, (req, res) => {
     });
 });
 
-// Get all waste categories
-router.get('/categoryvillager', verifyUser, (req, res) => {
+// GET all categories (main category list)
+router.get('/categoryvillager', verifyUser,(req, res) => {
     const search = req.query.search || '';
-    const query = `SELECT * FROM waste_categories WHERE name LIKE ? OR description LIKE ?`;
-  
-    const values = [`%${search}%`, `%${search}%`];
-  
-    db.query(query, values, (err, result) => {
-        if (err) {
-            return res.status(500).json({ Error: err.message });
-        }
+
+    const query = `
+        SELECT * FROM waste_categories 
+        WHERE name LIKE ? OR description LIKE ?
+    `;
+
+    db.query(query, [`%${search}%`, `%${search}%`], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
         return res.status(200).json({
             status: "success",
             results: result,
-            vill_id: req.vill_id,
+            vill_id: req.vill_id
         });
     });
-  });;
+});
+// GET: villager waste by type
+router.get('/wastevillager/type/:type', verifyUser, (req, res) => {
+    const type = req.params.type.toLowerCase();
 
-//get all category
+    const validTypes = [
+        "bathroom", "big", "composable",
+        "dirty", "energyrdf", "hazardous",
+        "recycle"
+    ];
 
-router.get('/dirtywastevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "coll_id is missing from the token" });
+    if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: "Invalid waste type" });
     }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  router.get('/sellwastevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  router.get('/composablegarbagevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "vill_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  router.get('/energyrdfwastevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "vill_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  router.get('/hazardouswastevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "vill_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  
-  router.get('/bathroomwastevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "vill_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  
-  router.get('/bigwastevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "vill_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
 
-  //get GarbageTruckSchedule
-router.get('/garbagetruckschedulevillager', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "coll_id is missing from the token" });
+    db.query(`SELECT * FROM waste_categories WHERE type = ?`, [type], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        return res.status(200).json({
+            status: "success",
+            results: result,
+            vill_id: req.vill_id
+        });
+    });
+});
+
+
+// ตารางรถขยะ (Villager)
+const garbageDataVillager = {
+    Mondayvillager: {
+        dayName: 'วันจันทร์',
+        type: 'ขยะเปื้อน / เปียกน้ำ',
+        themeColor: '#EAB308',
+        icon: 'bi-droplet-fill',
+        heading: 'ประเภทขยะเปื้อนและเปียกน้ำ',
+        description: 'ขยะที่มีการปนเปื้อนสารอินทรีย์ หรือเปียกชื้น ไม่สามารถนำไปรีไซเคิลได้ง่าย',
+        link: '/schedule/mondayvillager'
+    },
+    Tuesdayvillager: {
+        dayName: 'วันอังคาร',
+        type: 'ขยะเชื้อเพลิง / พลังงาน',
+        themeColor: '#DB2777',
+        icon: 'bi-lightning-charge-fill',
+        heading: 'ประเภทขยะเชื้อเพลิง (RDF)',
+        description: 'ขยะแห้งที่ผ่านการคัดแยกแล้ว สามารถนำไปเป็นเชื้อเพลิงทดแทน',
+        link: '/schedule/tuesdayvillager'
+    },
+    Wednesdayvillager: {
+        dayName: 'วันพุธ',
+        type: 'ขยะห้องน้ำ',
+        themeColor: '#16A34A',
+        icon: 'bi-trash-fill',
+        heading: 'ประเภทขยะห้องน้ำ',
+        description: 'ขยะทั่วไปที่เกิดจากการใช้งานสุขอนามัย',
+        link: '/schedule/wednesdayvillager'
+    },
+    Fridayvillager: {
+        dayName: 'วันศุกร์',
+        type: 'ขยะอันตราย',
+        specialTag: 'ระวังอันตราย',
+        themeColor: '#2563EB',
+        icon: 'bi-exclamation-triangle-fill',
+        heading: 'ประเภทขยะอันตราย',
+        description: 'ขยะที่มีสารปนเปื้อนวัตถุอันตราย ห้ามทิ้งรวมกับขยะอื่น',
+        link: '/schedule/fridayvillager'
     }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
-  
-  router.get('/garbageData', verifyUser, (req, res) => {
-    if (!req.vill_id) {
-        return res.status(400).json({ error: "coll_id is missing from the token" });
-    }
-    return res.status(200).json({ status: "success", name: req.name, vill_id: req.vill_id });
-  });
+};
+
+// Route ตารางรถขยะทั้งหมด
+router.get('/garbagetruckschedulevillager', (req, res) => {
+    res.status(200).json({ status: "success", data: garbageDataVillager });
+});
+
+// Route รายวัน
+router.get('/schedule/mondayvillager', (req, res) => res.json({ status: "success", data: garbageDataVillager.MondayVillager }));
+router.get('/schedule/tuesdayvillager', (req, res) => res.json({ status: "success", data: garbageDataVillager.TuesdayVillager }));
+router.get('/schedule/wednesdayvillager', (req, res) => res.json({ status: "success", data: garbageDataVillager.WednesdayVillager }));
+router.get('/schedule/fridayvillager', (req, res) => res.json({ status: "success", data: garbageDataVillager.FridayVillager }));
+
 
   //get wastepricevillager
 router.get('/wastepricevillager',verifyUser, (req, res) => {
