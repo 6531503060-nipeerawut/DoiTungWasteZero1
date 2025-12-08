@@ -10,11 +10,29 @@ import UnauthorizedMessage from "../../components/UnauthorizedMessage";
 
 // MUI Components
 import {
-  Container, Paper, Typography, Box, Grid, TextField, MenuItem, Button,
-  FormControl, InputLabel, Select, InputAdornment, Alert, CircularProgress,
-  ToggleButton, ToggleButtonGroup, Snackbar, Fab, Dialog, DialogTitle,
-  DialogContent, DialogActions
-} from '@mui/material';
+  Container,
+  Paper,
+  Typography,
+  Box,
+  Grid,
+  TextField,
+  MenuItem,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  InputAdornment,
+  Alert,
+  CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
+  Snackbar,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 
 // MUI Icons
 import {
@@ -26,22 +44,25 @@ import {
   Description as DescriptionIcon,
   Business as BusinessIcon,
   HomeWork as HomeWorkIcon,
-  UploadFile as UploadFileIcon, 
-  CloudUpload as CloudUploadIcon
-} from '@mui/icons-material';
+  UploadFile as UploadFileIcon,
+  CloudUpload as CloudUploadIcon,
+} from "@mui/icons-material";
 
 axios.defaults.withCredentials = true;
 
 function AddingWasteCollector() {
   document.title = "บันทึกขยะ (เจ้าหน้าที่) - DoiTung Zero-Waste";
 
+  const navigate = useNavigate();
+
   const [auth, setAuth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [collId, setCollId] = useState(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  
+
   // --- Excel Upload States ---
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
@@ -58,22 +79,27 @@ function AddingWasteCollector() {
   });
 
   const [locations, setLocations] = useState([]);
-  const [locationType, setLocationType] = useState("village"); 
+  const [locationType, setLocationType] = useState("village");
   const [error, setError] = useState("");
-
-  const navigate = useNavigate();
 
   const formatThaiDate = (date) => {
     const d = new Date(date);
-    return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return d.toLocaleDateString("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
-  const displayDate = formatThaiDate(new Date());
+
+  const displayDate = formatThaiDate(formData.caw_date);
 
   // Fetch Locations
   const fetchLocations = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/c/locations?village=${locationType === 'village'}`,
+        `${process.env.REACT_APP_BACKEND_URL}/c/locations?village=${
+          locationType === "village"
+        }`,
         { withCredentials: true }
       );
       if (response.data.status === "success") {
@@ -92,7 +118,9 @@ function AddingWasteCollector() {
     }
   }, [locationType]);
 
-  useEffect(() => { fetchLocations(); }, [fetchLocations]);
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -110,7 +138,7 @@ function AddingWasteCollector() {
   const handleLocationTypeChange = (event, newType) => {
     if (newType !== null) {
       setLocationType(newType);
-      setFormData(prev => ({ ...prev, caw_location: "" }));
+      setFormData((prev) => ({ ...prev, caw_location: "" }));
     }
   };
 
@@ -121,7 +149,8 @@ function AddingWasteCollector() {
 
     const dataToSend = {
       ...formData,
-      caw_subWasteType: formData.caw_wasteType === "5" ? formData.caw_subWasteType : null,
+      caw_subWasteType:
+        formData.caw_wasteType === "5" ? formData.caw_subWasteType : null,
     };
 
     try {
@@ -137,7 +166,10 @@ function AddingWasteCollector() {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่");
+      setError(
+        err.response?.data?.error ||
+          "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -159,64 +191,91 @@ function AddingWasteCollector() {
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
       setExcelFile(e.target.files[0]);
-      setUploadMessage(null); 
+      setUploadMessage(null);
     }
   };
 
   const handleUploadConfirm = async () => {
-    if (!excelFile) return;
-    
-    setUploading(true);
-    setUploadMessage(null);
+  if (!excelFile) return;
+  
+  setUploading(true);
+  setUploadMessage(null);
 
-    const data = new FormData();
-    data.append("file", excelFile);
+  const data = new FormData();
+  data.append("file", excelFile);
 
-    try {
-      // ✅ แก้ไข URL ให้ถูกต้อง (เติม /c)
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/c/upload-excel`,
-        data,
-        { withCredentials: true, headers: { "Content-Type": "multipart/form-data" } }
-      );
-      
-      setUploadMessage({ type: 'success', text: `อัปโหลดสำเร็จ: ${response.data.message}` });
-      
-      // ปิด Popup อัตโนมัติหลังสำเร็จ 2 วินาที
-      setTimeout(() => {
-          setShowUploadPopup(false);
-          setExcelFile(null);
-          setUploadMessage(null);
-          // window.location.reload(); // หากต้องการรีโหลดหน้า
-      }, 2000);
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_BACKEND_URL}/c/upload-excel`,
+      data,
+      {
+        withCredentials: true,
+        // ❌ อย่าใส่ headers: { "Content-Type": "multipart/form-data" }
+      }
+    );
 
-    } catch (err) {
-      console.error(err);
-      const errorMsg = err.response?.data?.error || "การอัปโหลดล้มเหลว กรุณาตรวจสอบไฟล์และลองใหม่อีกครั้ง";
-      setUploadMessage({ type: 'error', text: errorMsg });
-    } finally {
-      setUploading(false);
-    }
-  };
+    setUploadMessage({
+      type: 'success',
+      text: `อัปโหลดสำเร็จ: ${response.data.message}`,
+    });
+
+    setTimeout(() => {
+      setShowUploadPopup(false);
+      setExcelFile(null);
+      setUploadMessage(null);
+    }, 2000);
+
+  } catch (err) {
+    console.error(err);
+    const errorMsg =
+      err.response?.data?.error ||
+      "การอัปโหลดล้มเหลว กรุณาตรวจสอบไฟล์และลองใหม่อีกครั้ง";
+    setUploadMessage({ type: "error", text: errorMsg });
+  } finally {
+    setUploading(false);
+  }
+};
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#F1F5F9' }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        backgroundColor: "#F1F5F9",
+      }}
+    >
       {auth ? (
         <>
           <Header collId={collId} />
 
-          <Container maxWidth="md" sx={{ mt: 4, mb: 12, flexGrow: 1 }}> 
+          <Container maxWidth="md" sx={{ mt: 4, mb: 12, flexGrow: 1 }}>
             <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
               <Box mb={4} textAlign="center">
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0F766E', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: "bold",
+                    color: "#0F766E",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                  }}
+                >
                   <ScaleIcon fontSize="large" /> บันทึกน้ำหนักขยะ
                 </Typography>
                 <Typography variant="body1" color="text.secondary" mt={1}>
@@ -224,14 +283,23 @@ function AddingWasteCollector() {
                 </Typography>
               </Box>
 
-              {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+              {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {error}
+                </Alert>
+              )}
 
               <form onSubmit={handleSubmit}>
                 <Grid container spacing={3}>
                   {/* Location & Date */}
                   <Grid item xs={12}>
-                    <Typography variant="h6" color="text.primary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                      <PlaceIcon sx={{ mr: 1, color: '#64748B' }} /> ข้อมูลสถานที่
+                    <Typography
+                      variant="h6"
+                      color="text.primary"
+                      gutterBottom
+                      sx={{ display: "flex", alignItems: "center" }}
+                    >
+                      <PlaceIcon sx={{ mr: 1, color: "#64748B" }} /> ข้อมูลสถานที่
                     </Typography>
                   </Grid>
 
@@ -249,11 +317,17 @@ function AddingWasteCollector() {
                         ),
                       }}
                       variant="outlined"
-                      sx={{ bgcolor: '#F8FAFC' }}
+                      sx={{ bgcolor: "#F8FAFC" }}
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6} display="flex" justifyContent="center">
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    display="flex"
+                    justifyContent="center"
+                  >
                     <ToggleButtonGroup
                       value={locationType}
                       exclusive
@@ -280,7 +354,9 @@ function AddingWasteCollector() {
                         label="เลือกสถานที่จัดเก็บ"
                       >
                         {locations.map((loc) => (
-                          <MenuItem key={loc.id} value={loc.id}>{loc.name}</MenuItem>
+                          <MenuItem key={loc.id} value={loc.id}>
+                            {loc.name}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -288,8 +364,14 @@ function AddingWasteCollector() {
 
                   {/* Waste Details */}
                   <Grid item xs={12} sx={{ mt: 2 }}>
-                    <Typography variant="h6" color="text.primary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                      <ScaleIcon sx={{ mr: 1, color: '#64748B' }} /> รายละเอียดขยะ
+                    <Typography
+                      variant="h6"
+                      color="text.primary"
+                      gutterBottom
+                      sx={{ display: "flex", alignItems: "center" }}
+                    >
+                      <ScaleIcon sx={{ mr: 1, color: "#64748B" }} />{" "}
+                      รายละเอียดขยะ
                     </Typography>
                   </Grid>
 
@@ -332,7 +414,11 @@ function AddingWasteCollector() {
                     </Grid>
                   )}
 
-                  <Grid item xs={12} md={formData.caw_wasteType === "5" ? 12 : 6}>
+                  <Grid
+                    item
+                    xs={12}
+                    md={formData.caw_wasteType === "5" ? 12 : 6}
+                  >
                     <TextField
                       fullWidth
                       required
@@ -345,7 +431,11 @@ function AddingWasteCollector() {
                         if (/^\d*(\.\d{0,2})?$/.test(value)) handleChange(e);
                       }}
                       InputProps={{
-                        endAdornment: <InputAdornment position="end">กก.</InputAdornment>,
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            กก.
+                          </InputAdornment>
+                        ),
                       }}
                     />
                   </Grid>
@@ -363,7 +453,10 @@ function AddingWasteCollector() {
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
-                            <DescriptionIcon color="action" sx={{ mt: -3 }} />
+                            <DescriptionIcon
+                              color="action"
+                              sx={{ mt: -3 }}
+                            />
                           </InputAdornment>
                         ),
                       }}
@@ -371,23 +464,36 @@ function AddingWasteCollector() {
                   </Grid>
 
                   {/* Action Buttons */}
-                  <Grid item xs={12} display="flex" justifyContent="flex-end" gap={2} mt={2}>
-                    <Button 
-                      variant="outlined" 
-                      color="secondary" 
+                  <Grid
+                    item
+                    xs={12}
+                    display="flex"
+                    justifyContent="flex-end"
+                    gap={2}
+                    mt={2}
+                  >
+                    <Button
+                      variant="outlined"
+                      color="secondary"
                       onClick={resetForm}
                       startIcon={<ClearIcon />}
                       size="large"
                     >
                       ล้างข้อมูล
                     </Button>
-                    <Button 
-                      type="submit" 
-                      variant="contained" 
-                      color="primary" 
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
                       size="large"
                       disabled={submitting}
-                      startIcon={submitting ? <CircularProgress size={20} /> : <SaveIcon />}
+                      startIcon={
+                        submitting ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          <SaveIcon />
+                        )
+                      }
                     >
                       {submitting ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
                     </Button>
@@ -398,103 +504,135 @@ function AddingWasteCollector() {
           </Container>
 
           {/* --- FAB Button to Open Upload Popup --- */}
-          <Box sx={{ position: "fixed", bottom: 100, right: 20, zIndex: 1000 }}>
-             <Fab
-                color="secondary"
-                variant="extended"
-                onClick={() => setShowUploadPopup(true)}
-                sx={{ 
-                    bgcolor: '#D4AF37', 
-                    color: '#1A3C34', 
-                    fontWeight: 'bold',
-                    boxShadow: 4,
-                    '&:hover': { bgcolor: '#C09E30' }
-                }}
-             >
-                <UploadFileIcon sx={{ mr: 1 }} />
-                นำเข้า Excel
-             </Fab>
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: 100,
+              right: 20,
+              zIndex: 1000,
+            }}
+          >
+            <Fab
+              color="secondary"
+              variant="extended"
+              onClick={() => setShowUploadPopup(true)}
+              sx={{
+                bgcolor: "#D4AF37",
+                color: "#1A3C34",
+                fontWeight: "bold",
+                boxShadow: 4,
+                "&:hover": { bgcolor: "#C09E30" },
+              }}
+            >
+              <UploadFileIcon sx={{ mr: 1 }} />
+              นำเข้า Excel
+            </Fab>
           </Box>
 
           {/* --- Upload Excel Popup Dialog --- */}
-          <Dialog open={showUploadPopup} onClose={() => setShowUploadPopup(false)} fullWidth maxWidth="sm">
-            <DialogTitle sx={{ bgcolor: '#F1F5F9', borderBottom: '1px solid #E2E8F0' }}>
-                <Box display="flex" alignItems="center">
-                    <CloudUploadIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6" fontWeight="bold">อัปโหลดไฟล์ Excel</Typography>
-                </Box>
+          <Dialog
+            open={showUploadPopup}
+            onClose={() => setShowUploadPopup(false)}
+            fullWidth
+            maxWidth="sm"
+          >
+            <DialogTitle
+              sx={{
+                bgcolor: "#F1F5F9",
+                borderBottom: "1px solid #E2E8F0",
+              }}
+            >
+              <Box display="flex" alignItems="center">
+                <CloudUploadIcon color="primary" sx={{ mr: 1 }} />
+                <Typography variant="h6" fontWeight="bold">
+                  อัปโหลดไฟล์ Excel
+                </Typography>
+              </Box>
             </DialogTitle>
             <DialogContent sx={{ pt: 3 }}>
-                <Box 
-                    display="flex" 
-                    flexDirection="column" 
-                    alignItems="center" 
-                    justifyContent="center" 
-                    p={4} 
-                    border="2px dashed #CBD5E1" 
-                    borderRadius={2}
-                    bgcolor="#FAFAFA"
-                    mt={2}
-                >
-                    <input
-                        accept=".xlsx,.xls"
-                        style={{ display: "none" }}
-                        id="popup-upload-excel"
-                        type="file"
-                        onChange={handleFileSelect}
-                    />
-                    <label htmlFor="popup-upload-excel">
-                        <Button variant="outlined" component="span" startIcon={<UploadFileIcon />}>
-                            เลือกไฟล์
-                        </Button>
-                    </label>
-                    
-                    {excelFile && (
-                        <Typography variant="body1" mt={2} fontWeight="bold">
-                            ไฟล์ที่เลือก: {excelFile.name}
-                        </Typography>
-                    )}
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                p={4}
+                border="2px dashed #CBD5E1"
+                borderRadius={2}
+                bgcolor="#FAFAFA"
+                mt={2}
+              >
+                <input
+                  accept=".xlsx,.xls"
+                  style={{ display: "none" }}
+                  id="popup-upload-excel"
+                  type="file"
+                  onChange={handleFileSelect}
+                />
+                <label htmlFor="popup-upload-excel">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<UploadFileIcon />}
+                  >
+                    เลือกไฟล์
+                  </Button>
+                </label>
 
-                    {!excelFile && (
-                        <Typography variant="body2" color="text.secondary" mt={1}>
-                            รองรับไฟล์ .xlsx หรือ .xls (รูปแบบตารางตามกำหนด)
-                        </Typography>
-                    )}
-                </Box>
-
-                {uploadMessage && (
-                    <Alert severity={uploadMessage.type} sx={{ mt: 2 }}>
-                        {uploadMessage.text}
-                    </Alert>
+                {excelFile && (
+                  <Typography variant="body1" mt={2} fontWeight="bold">
+                    ไฟล์ที่เลือก: {excelFile.name}
+                  </Typography>
                 )}
+
+                {!excelFile && (
+                  <Typography variant="body2" color="text.secondary" mt={1}>
+                    รองรับไฟล์ .xlsx หรือ .xls (รูปแบบตารางตามกำหนด)
+                  </Typography>
+                )}
+              </Box>
+
+              {uploadMessage && (
+                <Alert severity={uploadMessage.type} sx={{ mt: 2 }}>
+                  {uploadMessage.text}
+                </Alert>
+              )}
             </DialogContent>
-            <DialogActions sx={{ p: 2, borderTop: '1px solid #E2E8F0' }}>
-                <Button onClick={() => setShowUploadPopup(false)} color="inherit">
-                    ปิด
-                </Button>
-                <Button 
-                    onClick={handleUploadConfirm} 
-                    variant="contained" 
-                    color="primary"
-                    disabled={!excelFile || uploading}
-                    startIcon={uploading && <CircularProgress size={20} color="inherit" />}
-                >
-                    {uploading ? "กำลังอัปโหลด..." : "ยืนยันการอัปโหลด"}
-                </Button>
+            <DialogActions
+              sx={{ p: 2, borderTop: "1px solid #E2E8F0" }}
+            >
+              <Button
+                onClick={() => setShowUploadPopup(false)}
+                color="inherit"
+              >
+                ปิด
+              </Button>
+              <Button
+                onClick={handleUploadConfirm}
+                variant="contained"
+                color="primary"
+                disabled={!excelFile || uploading}
+                startIcon={
+                  uploading && (
+                    <CircularProgress size={20} color="inherit" />
+                  )
+                }
+              >
+                {uploading ? "กำลังอัปโหลด..." : "ยืนยันการอัปโหลด"}
+              </Button>
             </DialogActions>
           </Dialog>
 
           {/* Snackbar */}
           <Snackbar
             open={openSnackbar}
-            autoHideDuration={1500} 
+            autoHideDuration={1500}
             onClose={() => setOpenSnackbar(false)}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
           >
-            <Alert 
-                onClose={() => setOpenSnackbar(false)} 
-                severity="success" 
-                sx={{ width: '100%', boxShadow: 3 }}
+            <Alert
+              onClose={() => setOpenSnackbar(false)}
+              severity="success"
+              sx={{ width: "100%", boxShadow: 3 }}
             >
               การบันทึกข้อมูลเสร็จสมบูรณ์
             </Alert>

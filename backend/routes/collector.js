@@ -687,6 +687,7 @@ router.get('/wastepricecollector',verifyUser, (req, res) => {
 })
 
 
+
 // UPLOAD EXCEL (SMART TIMELINE + SMART LOCATION + วันจันทร์/อ./พ./ศ.)
 router.post("/upload-excel", verifyUser, uploadExcel.single("file"), async (req, res) => {
     try {
@@ -846,7 +847,4 @@ router.post("/upload-excel", verifyUser, uploadExcel.single("file"), async (req,
     }
 });
 
-
-
 module.exports = router;
-
